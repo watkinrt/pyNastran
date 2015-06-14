@@ -39,20 +39,13 @@ class OUG(object):
         * #s_code        = 0 (Stress)
         * num_wide      = 8 (???)
         """
-        cycle, iMode = marker.strip().split('R E A L   E I G E N V E C T O R   N O .')
-        iMode = int(iMode)
+        cycle, imode = marker.strip().split('R E A L   E I G E N V E C T O R   N O .')
+        imode = int(imode)
 
         cycles = cycle.strip().split('=')
-        #print smarker
         assert 'CYCLES' == cycles[0].strip(), 'marker=%s' % marker
         cycle = float(cycles[1])
 
-        #print "marker = |%s|" %(marker)
-        #subcase_name = '???'
-        #print self.storedLines
-        #isubcase = self.storedLines[-2].strip()[1:]
-        #isubcase = int(isubcase.strip('SUBCASE '))
-        #print "subcase_name=%s isubcase=%s" %(subcase_name, isubcase)
         (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         eigenvalue_real = transient[1]
         headers = self.skip(2)
@@ -61,25 +54,22 @@ class OUG(object):
             'log': self.log, 'analysis_code': analysis_code,
             'device_code': 1, 'table_code': 7, 'sort_code': 0,
             'sort_bits': [0, 0, 0], 'num_wide': 8, 'format_code': 1,
-            'mode': iMode, 'eigr': eigenvalue_real, 'mode_cycle': cycle,
+            'mode': imode, 'eigr': eigenvalue_real, 'mode_cycle': cycle,
             'dataNames': ['mode', 'eigr', 'mode_cycle'],
             'name': 'mode', 'table_name': 'OUGV1',
-            'nonlinear_factor': iMode,
-            #'s_code':0,
-            #'element_name':'CBAR','element_type':34,'stress_bits':stress_bits,
+            'nonlinear_factor': imode,
         }
-        data = self._real_f06_table_data(allow_blanks=True)
+        data = self._real_f06_real_table_data(allow_blanks=True)
 
         #print("cycle=%-8s eigen=%s" % (cycle, eigenvalue_real))
-        #print "isubcase = %s" % isubcase
         if isubcase in self.eigenvectors:
             self.eigenvectors[isubcase].read_f06_data(data_code, data)
         else:
             is_sort1 = True
             if self.is_vectorized:
-                vector = RealEigenvectorArray(data_code, is_sort1, isubcase, iMode, f06_flag=True)
+                vector = RealEigenvectorArray(data_code, is_sort1, isubcase, imode, f06_flag=True)
             else:
-                vector = Eigenvector(data_code, is_sort1, isubcase, iMode)
+                vector = Eigenvector(data_code, is_sort1, isubcase, imode)
             vector.read_f06_data(data_code, data)
             self.eigenvectors[isubcase] = vector
 
@@ -87,7 +77,7 @@ class OUG(object):
         headers = self.skip(2)
         self._read_table_dummy()
 
-    def _real_f06_table_data(self, allow_blanks=False):
+    def _real_f06_real_table_data(self, allow_blanks=False):
         """
         Reads real displacement/velocity/spc forces/mpc forces
         Handles GRIDs and SPOINTs.
@@ -117,18 +107,17 @@ class OUG(object):
             #: TYPE (str)
             grid_type = line[14:24].strip()
 
+            fields = [line[24:39], line[39:54], line[54:69], line[69:84], line[84:99], line[99:114]]
             if grid_type in ['G', 'L']:
                 # .. todo:: are L points single DOFs?
                 # we do know they're greater than the max value...
                 sline = [node_id, grid_type]
-                fields = [line[24:39], line[39:54], line[54:69], line[69:84], line[84:99], line[99:114]]
                 if allow_blanks:
                     sline += [float(val) if val.strip() != '' else 0.0 for val in fields]
                 else:
                     sline += [float(val) for val in fields]
                 data.append(sline)
             elif grid_type == 'S':
-                fields = [line[24:39], line[39:54], line[54:69], line[69:84], line[84:99], line[99:114]]
                 fields = [float(val) if val.strip() != '' else None for val in fields]
                 for ioffset, field in enumerate(fields):
                     if field is None:
@@ -172,10 +161,10 @@ class OUG(object):
             'lsdvmn': 1, 'format_code': 3,
             'dataNames':['lsdvmn']
         }
-        #print "headers = %s" % (headers)
-        #print "transient =", transient
+        #print("headers = %s" % (headers))
+        #print("transient =", transient)
 
-        data = self._real_f06_table_data(allow_blanks=False)
+        data = self._real_f06_real_table_data(allow_blanks=False)
 
         if isubcase in self.displacements:
             self.displacements[isubcase].add_f06_data(data, transient)

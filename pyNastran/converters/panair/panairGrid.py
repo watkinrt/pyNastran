@@ -62,6 +62,13 @@ class PanairGrid(object):
         self.ifmcpr = 0.0
         self.icostp = 0.0
 
+        self.epsgeo = 0.0
+        self.igeoin = -1.0
+        self.igeout = 0.
+        self.nwxref = 0.
+        self.triint = 0.0
+        self.iabsum = -0.0
+
         self.isEnd = None
 
         self.peaSection = ''
@@ -75,6 +82,7 @@ class PanairGrid(object):
         self.flowSection = ''
         self.sectionalPropSection = ''
         self.gridSection = ''
+        self.symmetrySection = ''
 
         self.msg = ''
 
@@ -209,7 +217,6 @@ class PanairGrid(object):
                 # else: skip
             else:
                 lines2.append(line)
-
         return lines2
 
     def _read_title(self, section):

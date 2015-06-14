@@ -1,4 +1,3 @@
-# pylint: disable=C0103,R0902,R0904,R0914,C0111
 """
 All damper elements are defined in this file.  This includes:
 
@@ -99,10 +98,6 @@ class CDAMP1(LineDamper):
     @property
     def node_ids(self):
         return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True)]
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def _is_same_card(self, elem, debug=False):
         if self.type != elem.type:
@@ -210,10 +205,6 @@ class CDAMP2(LineDamper):
     def node_ids(self):
         return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True)]
 
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
-
     def raw_fields(self):
         nodes = self.node_ids
         fields = ['CDAMP2', self.eid, self.b, nodes[0], self.c1,
@@ -276,7 +267,7 @@ class CDAMP3(LineDamper):
         return self.pid.b
 
     def cross_reference(self, model):
-        msg = ' which is required by CDAMP3 eid=%s' % self.eid
+        msg = ', which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
@@ -286,15 +277,10 @@ class CDAMP3(LineDamper):
 
     @property
     def node_ids(self):
-        return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True) ]
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
+        return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True)]
 
     def raw_fields(self):
-        nodes = self.node_ids
-        list_fields = ['CDAMP3', self.eid, self.pid, nodes[0], nodes[1]]
+        list_fields = ['CDAMP3', self.eid, self.Pid()] + self.node_ids
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -323,8 +309,10 @@ class CDAMP4(LineDamper):
             self.eid = integer(card, 1, 'eid')
             #: Value of the scalar damper (Real)
             self.b = double(card, 2, 'b')
-            nids = [integer_or_blank(card, 3, 'n1', 0),
-                    integer_or_blank(card, 4, 'n2', 0)]
+            nids = [
+                    integer_or_blank(card, 3, 'n1', 0),
+                    integer_or_blank(card, 4, 'n2', 0)
+            ]
             assert len(card) <= 5, 'len(CDAMP4 card) = %i' % len(card)
         else:
             self.eid = data[0]
@@ -350,8 +338,8 @@ class CDAMP4(LineDamper):
         return self.b
 
     def cross_reference(self, model):
-        msg = ' which is required by CDAMP4 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        msg = ', which is required by %s eid=%s' % (self.type, self.eid)
+        self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
 
     def nodeIDs(self):
         """deprecated"""
@@ -361,13 +349,8 @@ class CDAMP4(LineDamper):
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
-
     def raw_fields(self):
-        nodes = self.node_ids
-        list_fields = ['CDAMP4', self.eid, self.b, nodes[0], nodes[1]]
+        list_fields = ['CDAMP4', self.eid, self.b] + self.node_ids
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -421,8 +404,8 @@ class CDAMP5(LineDamper):
             assert self.pid.type in ['PDAMP5'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
 
     def cross_reference(self, model):
-        msg = ''
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        msg = ', which is required by %s eid=%s' % (self.type, self.eid)
+        self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
     def Eid(self):
@@ -510,10 +493,6 @@ class CVISC(LineDamper):
     @property
     def node_ids(self):
         return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True)]
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def raw_fields(self):
         list_fields = ['CVISC', self.eid, self.Pid()] + self.node_ids

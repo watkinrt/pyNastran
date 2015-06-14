@@ -5,12 +5,14 @@ import scipy
 from pyNastran.bdf.bdf import BDF
 from numpy import array, zeros, unique, where, arange, hstack, vstack, searchsorted
 
-def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol):
+def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
+                          neq_max=10):
     """
     Equivalences nodes; keeps the lower node id; creates two nodes with the same
 
     .. warning:: only handles CQUAD4, CTRIA3
     .. warning:: assumes cid=0
+    .. warning:: renumbers nodes
     """
     model = BDF()
     model.read_bdf(bdf_filename, xref=True)
@@ -23,16 +25,20 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol):
 
     inode = 1
     nid_map = {}
-    for nid, node in sorted(iteritems(model.nodes)):
-        node.nid = inode
-        nid_map[inode - 1] = nid
-        inode += 1
+    renumber_nodes = True
+    if renumber_nodes:
+        for nid, node in sorted(iteritems(model.nodes)):
+            node.nid = inode
+            nid_map[inode - 1] = nid
+            inode += 1
+    else:
+	    raise NotImplementedError()
     #model.write_bdf('A_' + bdf_filename_out)
 
     nids = array([node.nid for nid, node in sorted(iteritems(model.nodes))], dtype='int32')
     nnodes = len(nids)
     i = arange(nnodes, dtype='int32')
-    nids2 = vstack([i, nids]).T
+    #nids2 = vstack([i, nids]).T
 
     nodes_xyz = array([node.xyz for nid, node in sorted(iteritems(model.nodes))], dtype='float32')
 
@@ -50,9 +56,9 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol):
             raise NotImplementedError(element.type)
 
     quads = array(quads, dtype='int32') - 1
-    quadmap = array(quadmap, dtype='int32')
+    #quadmap = array(quadmap, dtype='int32')
     tris = array(tris, dtype='int32') - 1
-    trimap = array(trimap, dtype='int32')
+    #trimap = array(trimap, dtype='int32')
 
     # build the kdtree
     try:
@@ -62,12 +68,14 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol):
         raise RuntimeError(nodes_xyz)
 
     # find the node ids of interest
-    nids_new = hstack([unique(quads), unique(tris)])
+    nids_new = unique(hstack([
+        quads.flatten(), tris.flatten()
+    ]))
     nids_new.sort()
     inew = searchsorted(nids, nids_new, side='left')
 
     # check the closest 10 nodes for equality
-    deq, ieq = kdt.query(nodes_xyz[inew, :], k=10, distance_upper_bound=tol)
+    deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
 
     # get the ids of the duplicate nodes
     slots = where(ieq[:, 1:] < nnodes)
@@ -90,7 +98,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol):
         assert node2.seid == node1.seid
         skip_nodes.append(nid2)
 
-    model.remove_nodes = skip_nodes
+    #model.remove_nodes = skip_nodes
     #model._write_nodes = _write_nodes
     model.write_bdf(bdf_filename_out)
 

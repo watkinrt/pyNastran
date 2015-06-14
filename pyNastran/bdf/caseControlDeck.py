@@ -526,7 +526,7 @@ class CaseControlDeck(object):
             self.log.debug(msg)
 
         if key == 'SUBCASE':
-            assert value not in self.subcases
+            assert value not in self.subcases, 'key=%s value=%s already exists' % (key, value)
             assert isinstance(value, int)
             isubcase = value
             #print("value=", value)

@@ -9,6 +9,7 @@ All dynamic loads are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import integer_types
 from six.moves import zip, range
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
@@ -78,7 +79,7 @@ class RLOAD1(TabularLoad):
         if card:
             self.sid = integer(card, 1, 'sid')
             self.exciteID = integer(card, 2, 'exciteID')
-            self.delay = integer_double_or_blank(card, 3, 'delay')
+            self.delay = integer_double_or_blank(card, 3, 'delay', 0)
             self.dphase = integer_double_or_blank(card, 4, 'dphase')
             self.tc = integer_or_blank(card, 5, 'tc', 0)
             self.td = integer_or_blank(card, 6, 'td', 0)
@@ -112,25 +113,33 @@ class RLOAD1(TabularLoad):
     def Tc(self):
         if self.tc == 0:
             return None
-        elif isinstance(self.tc, int):
+        elif isinstance(self.tc, integer_types):
             return self.tc
         return self.tc.tid
 
     def Td(self):
         if self.td == 0:
             return None
-        elif isinstance(self.td, int):
+        elif isinstance(self.td, integer_types):
             return self.td
         return self.td.tid
 
+    @property
+    def delay_id(self):
+        if self.delay == 0:
+            return None
+        elif isinstance(self.delay, integer_types):
+            return self.delay
+        return self.delay.sid
+
     def raw_fields(self):
-        list_fields = ['RLOAD1', self.sid, self.exciteID, self.delay, self.dphase,
+        list_fields = ['RLOAD1', self.sid, self.exciteID, self.delay_id, self.dphase,
                        self.Tc(), self.Td(), self.Type]
         return list_fields
 
     def repr_fields(self):
         Type = set_blank_if_default(self.Type, 'LOAD')
-        list_fields = ['RLOAD1', self.sid, self.exciteID, self.delay, self.dphase,
+        list_fields = ['RLOAD1', self.sid, self.exciteID, self.delay_id, self.dphase,
                        self.Tc(), self.Td(), Type]
         return list_fields
 
@@ -166,7 +175,7 @@ class RLOAD2(TabularLoad):
         if card:
             self.sid = integer(card, 1, 'sid')
             self.exciteID = integer(card, 2, 'exciteID')
-            self.delay = integer_double_or_blank(card, 3, 'delay')
+            self.delay = integer_double_or_blank(card, 3, 'delay', 0)
             self.dphase = integer_double_or_blank(card, 4, 'dphase')
             self.tb = integer_or_blank(card, 5, 'tb', 0)
             self.tp = integer_or_blank(card, 6, 'tp', 0)
@@ -203,25 +212,33 @@ class RLOAD2(TabularLoad):
     def Tb(self):
         if self.tb == 0:
             return None
-        elif isinstance(self.tb, int):
+        elif isinstance(self.tb, integer_types):
             return self.tb
         return self.tb.tid
 
     def Tp(self):
         if self.tp == 0:
             return None
-        elif isinstance(self.tp, int):
+        elif isinstance(self.tp, integer_types):
             return self.tp
         return self.tp.tid
 
+    @property
+    def delay_id(self):
+        if self.delay == 0:
+            return None
+        elif isinstance(self.delay, integer_types):
+            return self.delay
+        return self.delay.sid
+
     def raw_fields(self):
-        list_fields = ['RLOAD2', self.sid, self.exciteID, self.delay, self.dphase,
+        list_fields = ['RLOAD2', self.sid, self.exciteID, self.delay_id, self.dphase,
                        self.Tb(), self.Tp(), self.Type]
         return list_fields
 
     def repr_fields(self):
         Type = set_blank_if_default(self.Type, 0.0)
-        list_fields = ['RLOAD2', self.sid, self.exciteID, self.delay, self.dphase,
+        list_fields = ['RLOAD2', self.sid, self.exciteID, self.delay_id, self.dphase,
                        self.Tb(), self.Tp(), Type]
         return list_fields
 
@@ -232,6 +249,7 @@ class RLOAD2(TabularLoad):
         if is_double:
             return self.comment() + print_card_double(card)
         return self.comment() + print_card_16(card)
+
 
 class TLOAD1(TabularLoad):
     r"""
@@ -264,7 +282,7 @@ class TLOAD1(TabularLoad):
             #: be used for all degrees-of-freedom that are excited by this
             #: dynamic load entry.  See also Remark 9. (Integer >= 0,
             #: real or blank)
-            self.delay = integer_double_or_blank(card, 3, 'delay')
+            self.delay = integer_double_or_blank(card, 3, 'delay', 0)
 
             #: Defines the type of the dynamic excitation. (LOAD,DISP, VELO, ACCE)
             self.Type = integer_string_or_blank(card, 4, 'Type', 'LOAD')
@@ -305,19 +323,27 @@ class TLOAD1(TabularLoad):
     def Tid(self):
         if self.tid == 0:
             return None
-        elif isinstance(self.tid, int):
+        elif isinstance(self.tid, integer_types):
             return self.tid
         return self.tid.tid
 
+    @property
+    def delay_id(self):
+        if self.delay == 0:
+            return None
+        elif isinstance(self.delay, integer_types):
+            return self.delay
+        return self.delay.sid
+
     def raw_fields(self):
-        list_fields = ['TLOAD1', self.sid, self.exciteID, self.delay, self.Type,
+        list_fields = ['TLOAD1', self.sid, self.exciteID, self.delay_id, self.Type,
                        self.Tid(), self.us0, self.vs0]
         return list_fields
 
     def repr_fields(self):
         us0 = set_blank_if_default(self.us0, 0.0)
         vs0 = set_blank_if_default(self.vs0, 0.0)
-        list_fields = ['TLOAD1', self.sid, self.exciteID, self.delay, self.Type,
+        list_fields = ['TLOAD1', self.sid, self.exciteID, self.delay_id, self.Type,
                        self.Tid(), us0, vs0]
         return list_fields
 
@@ -408,8 +434,16 @@ class TLOAD2(TabularLoad):
         # delay
         # exciteID
 
+    @property
+    def delay_id(self):
+        if self.delay == 0:
+            return None
+        elif isinstance(self.delay, integer_types):
+            return self.delay
+        return self.delay.sid
+
     def raw_fields(self):
-        list_fields = ['TLOAD2', self.sid, self.exciteID, self.delay, self.Type,
+        list_fields = ['TLOAD2', self.sid, self.exciteID, self.delay_id, self.Type,
                        self.T1, self.T2, self.frequency, self.phase, self.c, self.b,
                        self.us0, self.vs0]
         return list_fields
@@ -422,7 +456,7 @@ class TLOAD2(TabularLoad):
 
         us0 = set_blank_if_default(self.us0, 0.0)
         vs0 = set_blank_if_default(self.vs0, 0.0)
-        list_fields = ['TLOAD2', self.sid, self.exciteID, self.delay, self.Type,
+        list_fields = ['TLOAD2', self.sid, self.exciteID, self.delay_id, self.Type,
                        self.T1, self.T2, frequency, phase, c, b, us0, vs0]
         return list_fields
 

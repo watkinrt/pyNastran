@@ -266,22 +266,24 @@ class CHEXA20(SolidElement):
             self.eid = integer(card, 1, 'eid')
             #: Property ID
             self.pid = integer(card, 2, 'pid')
-            nids = [integer(card, 3, 'nid1'), integer(card, 4, 'nid2'),
-                    integer(card, 5, 'nid3'), integer(card, 6, 'nid4'),
-                    integer(card, 7, 'nid5'), integer(card, 8, 'nid6'),
-                    integer(card, 9, 'nid7'), integer(card, 10, 'nid8'),
-                    integer_or_blank(card, 11, 'nid9'),
-                    integer_or_blank(card, 12, 'nid10'),
-                    integer_or_blank(card, 13, 'nid11'),
-                    integer_or_blank(card, 14, 'nid12'),
-                    integer_or_blank(card, 15, 'nid13'),
-                    integer_or_blank(card, 16, 'nid14'),
-                    integer_or_blank(card, 17, 'nid15'),
-                    integer_or_blank(card, 18, 'nid16'),
-                    integer_or_blank(card, 19, 'nid17'),
-                    integer_or_blank(card, 20, 'nid18'),
-                    integer_or_blank(card, 21, 'nid19'),
-                    integer_or_blank(card, 22, 'nid20')]
+            nids = [
+                integer(card, 3, 'nid1'), integer(card, 4, 'nid2'),
+                integer(card, 5, 'nid3'), integer(card, 6, 'nid4'),
+                integer(card, 7, 'nid5'), integer(card, 8, 'nid6'),
+                integer(card, 9, 'nid7'), integer(card, 10, 'nid8'),
+                integer_or_blank(card, 11, 'nid9'),
+                integer_or_blank(card, 12, 'nid10'),
+                integer_or_blank(card, 13, 'nid11'),
+                integer_or_blank(card, 14, 'nid12'),
+                integer_or_blank(card, 15, 'nid13'),
+                integer_or_blank(card, 16, 'nid14'),
+                integer_or_blank(card, 17, 'nid15'),
+                integer_or_blank(card, 18, 'nid16'),
+                integer_or_blank(card, 19, 'nid17'),
+                integer_or_blank(card, 20, 'nid18'),
+                integer_or_blank(card, 21, 'nid19'),
+                integer_or_blank(card, 22, 'nid20')
+            ]
             assert len(card) <= 23, 'len(CHEXA20 card) = %i' % len(card)
         else:
             self.eid = data[0]
@@ -806,17 +808,19 @@ class CPYRAM13(SolidElement):
             self.eid = integer(card, 1, 'eid')
             #: Property ID
             self.pid = integer(card, 2, 'pid')
-            nids = [integer(card, 3, 'nid1'), integer(card, 4, 'nid2'),
-                    integer(card, 5, 'nid3'), integer(card, 6, 'nid4'),
-                    integer(card, 7, 'nid5'),
-                    integer_or_blank(card, 8, 'nid6'),
-                    integer_or_blank(card, 9, 'nid7'),
-                    integer_or_blank(card, 10, 'nid8'),
-                    integer_or_blank(card, 11, 'nid9'),
-                    integer_or_blank(card, 12, 'nid10'),
-                    integer_or_blank(card, 13, 'nid11'),
-                    integer_or_blank(card, 14, 'nid12'),
-                    integer_or_blank(card, 15, 'nid13')]
+            nids = [
+                integer(card, 3, 'nid1'), integer(card, 4, 'nid2'),
+                integer(card, 5, 'nid3'), integer(card, 6, 'nid4'),
+                integer(card, 7, 'nid5'),
+                integer_or_blank(card, 8, 'nid6'),
+                integer_or_blank(card, 9, 'nid7'),
+                integer_or_blank(card, 10, 'nid8'),
+                integer_or_blank(card, 11, 'nid9'),
+                integer_or_blank(card, 12, 'nid10'),
+                integer_or_blank(card, 13, 'nid11'),
+                integer_or_blank(card, 14, 'nid12'),
+                integer_or_blank(card, 15, 'nid13')
+            ]
             assert len(card) <= 16, 'len(CPYRAM13 1card) = %i' % len(card)
         else:
             self.eid = data[0]

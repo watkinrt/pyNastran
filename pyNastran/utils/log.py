@@ -9,15 +9,15 @@ def make_log(display=False):
 
     :param display: do not only create file but also print log information
     """
-    smsg = [("sys.version", sys.version), ("sys.version_info", sys.version_info)]
-    pmsg = ["machine", "platform", "processor", "architecture", "python_branch",
-           "python_revision", "win32_ver", "version", "uname", "system",
-           "python_build", "python_compiler", "python_implementation", "system",
-           "mac_ver", "linux_distribution", "libc_ver"]
+    smsg = [('sys.version', sys.version), ('sys.version_info', sys.version_info)]
+    pmsg = ['machine', 'platform', 'processor', 'architecture', 'python_branch',
+           'python_revision', 'win32_ver', 'version', 'uname', 'system',
+           'python_build', 'python_compiler', 'python_implementation', 'system',
+           'mac_ver', 'linux_distribution', 'libc_ver']
 
-    fmt = "%-{0}s = %s\n".format(max(map(len, pmsg + [j[0] for j in smsg])))
-    msg = "".join([fmt % (i, str(j).replace("\n", "; ")) for (i, j) in smsg])
-    msg += "".join([fmt % (i, str(getattr(platform, i)())) for i in pmsg])
+    fmt = '%-{0}s = %s\n'.format(max(map(len, pmsg + [j[0] for j in smsg])))
+    msg = ''.join([fmt % (i, str(j).replace('\n', '; ')) for (i, j) in smsg])
+    msg += ''.join([fmt % (i, str(getattr(platform, i)())) for i in pmsg])
     if display:
         print(msg)
 
@@ -102,35 +102,35 @@ class SimpleLogger(object):
         """
         if self.level not in ('debug', 'info'):
             return
-        self.msg_typ("INFO", msg)
+        self.msg_typ('INFO', msg)
 
     def warning(self, msg):
         """
         Log WARNING message
         :param msg: message to be logged
         """
-        self.msg_typ("WARNING", msg)
+        self.msg_typ('WARNING', msg)
 
     def error(self, msg):
         """
         Log ERROR message
         :param msg: message to be logged
         """
-        self.msg_typ("ERROR", msg)
+        self.msg_typ('ERROR', msg)
 
     def exception(self, msg):
         """
         Log EXCEPTION message
         :param msg: message to be logged
         """
-        self.msg_typ("ERROR", msg)
+        self.msg_typ('ERROR', msg)
 
     def critical(self, msg):
         """
         Log CRITICAL message
         :param msg: message to be logged
         """
-        self.msg_typ("CRITICAL", msg)
+        self.msg_typ('CRITICAL', msg)
 
 
 def get_logger(log=None, level='debug'):
@@ -145,6 +145,7 @@ def get_logger(log=None, level='debug'):
 def get_logger2(log=None, debug=True):
     """
     This function is useful as it will instantiate a SimpleLogger object if log=None.
+
     :param log:   a python logging module object;
                   if log is set, debug is ignored and uses the
                   settings the logging object has
@@ -165,7 +166,7 @@ def get_logger2(log=None, debug=True):
 
 if __name__ == '__main__':  # pragma: no cover
     # how to use a simple logger
-    for nam in ["debug", "info"]:
+    for nam in ['debug', 'info']:
         print('--- %s logger ---' % nam)
         test_log = SimpleLogger(nam)
         test_log.debug('debug message')

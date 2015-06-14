@@ -54,10 +54,10 @@ class BaseCard(BaseCardDeprecated):
             self._update_field_helper(n, value)
 
     def _update_field_helper(self, n, value):
-        raise NotImplementedError()
+        raise IndexError('%s has not overwritten _update_field_helper; out of range' % self.__class__.__name__)
 
     def _get_field_helper(self, n):
-        raise NotImplementedError()
+        raise IndexError('%s has not overwritten _get_field_helper; out of range' % self.__class__.__name__)
 
     def get_field(self, n):
         """
@@ -111,7 +111,7 @@ class BaseCard(BaseCardDeprecated):
         fields2 = card.raw_fields()
         return self._is_same_fields(fields1, fields2)
 
-    def print_raw_card(self, size=8, is_double=False):  ## TODO: needs to be fixed
+    def print_raw_card(self, size=8, is_double=False):
         """A card's raw fields include all defaults for all fields"""
         list_fields = self.raw_fields()
         return self.comment() + print_card(list_fields, size=size, is_double=is_double)
@@ -167,7 +167,7 @@ class Property(BaseCard):
         :returns mid: the Material ID
         :type mid:    int
         """
-        if isinstance(self.mid, int):
+        if isinstance(self.mid, integer_types):
             return self.mid
         else:
             return self.mid.mid
@@ -176,6 +176,12 @@ class Property(BaseCard):
         """dummy cross reference method for a Property"""
         msg = ' which is required by %s pid=%s' % (self.type, self.pid)
         self.mid = model.Material(self.mid, msg)
+
+    def write_card_8(self):
+        return self.write_card()
+
+    def write_card_16(self, is_double=False):
+        return self.write_card()
 
 
 class Material(BaseCard):
@@ -215,7 +221,7 @@ class Element(BaseCard, ElementDeprecated):
         :returns pid: the Property ID
         :type pid:    int
         """
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             return self.pid
         else:
             return self.pid.pid
@@ -369,9 +375,10 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
     :param sort_fields: should the fields be sorted at the end? (default=False)
     """
     # ..todo:  should this be removed...is the field capitalized when read in?
-    fields = [field.upper() if isinstance(field, string_types) else field for field in fields]
+    fields = [field.upper()
+              if isinstance(field, string_types) else field for field in fields]
 
-    if isinstance(fields, int):
+    if isinstance(fields, integer_types):
         return [fields]
     if len(fields) == 1:
         return [int(fields[0])]
@@ -382,7 +389,9 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
         if fields[i] == 'THRU':
             istart = int(fields[i - 1])
             iend = int(fields[i + 1])
-            for j in range(istart, iend + 1): # adding 1 to iend for the range offset
+
+            # adding 1 to iend for the range offset
+            for j in range(istart, iend + 1):
                 out.append(j)
             i += 2
         else:
@@ -544,14 +553,14 @@ def condense(value_list):
     packs = []
 
     dv_old = None
-    firstVal = value_list[0]
-    lastVal = firstVal
+    first_val = value_list[0]
+    last_val = first_val
 
     for val in value_list[1:]:
         try:
-            dv = val - lastVal
+            dv = val - last_val
         except TypeError:
-            print("lastVal=%r val=%r" % (lastVal, val))
+            print("lastVal=%r val=%r" % (last_val, val))
             print("valueList=%r" % value_list)
             raise
 
@@ -561,18 +570,18 @@ def condense(value_list):
 
         # fill up the pack
         if dv_old == dv:
-            lastVal = val
+            last_val = val
         else:
-            packs.append([firstVal, lastVal, dv_old])
-            lastVal = val
+            packs.append([first_val, last_val, dv_old])
+            last_val = val
             dv_old = None
-            firstVal = val
+            first_val = val
 
     # fills the last pack
     if dv_old == dv:
-        packs.append([firstVal, val, dv])
+        packs.append([first_val, val, dv])
     else:
-        packs.append([firstVal, val, dv_old])
+        packs.append([first_val, val, dv_old])
     return packs
 
 

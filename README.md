@@ -1,5 +1,5 @@
 # Documentation
-   * [v0.7] (http://pynastran-git.readthedocs.org/en/v0.7/index.html)
+   * [v0.7] (http://pynastran-git.readthedocs.org/en/v0.7.2/index.html)
    * [Master/Trunk](http://pynastran-git.readthedocs.org/en/latest/index.html)
 
 
@@ -19,11 +19,13 @@ for more detailed information.
 
 There is still a bit of updating left to do on the Wiki.  The outdated wiki pages will be updated soon.
 
-## pyNastran v0.7.1 has been Released (4/17/2015)
+## pyNastran v0.7.3 has been Released (6/??/2015)
 
 [Download pyNastran v0.7] (https://github.com/SteveDoyle2/pyNastran/releases)
 
-Some of the improvements include:
+This is a bug fix release.
+
+Some of the v0.7 changes include:
  * OP2
    * superelement support
    * vectorized support (uses much less memory; Element Forces not vectorized yet)
@@ -31,9 +33,9 @@ Some of the improvements include:
    * `PARAM,POST,-2` support
    * catching of most FATAL errors without needing to read the F06
  * F06
-   * improved F06 reader (the OP2 reader is still better)
+   * removed
  * BDF
-   * 20 new BDF cards
+   * 238 BDF cards
    * large field format and double precision writing
  * GUI
    * much improved GUI with transient support (real only), a results sidebar, logging, and scripting support
@@ -48,6 +50,19 @@ Additionally, there have also been many API changes.  It's a frustrating step, b
 Where possible, old methods will be maintained until v0.8, but that is not always possible.  If an old method is not supported and hadn't previouly been deprecated, make a ticket/issue and if it can be supported, it will be added back.  
 
 Additionally, most op2 object were changed in order to eliminate errors, and be more consistent.  For example, `plateStress` has been replaced by `ctria3_stress`, `cquad4_stress`, `ctria6_stress`, etc.  Also, plate centroids now have a `node_id` of `0`.  This greatly simplifies F06 writing and vectorized data extraction.
+
+
+## pyNastran v0.7.2 has been Released (4/25/2015)
+
+This was a bug fix release.
+
+## pyNastran v0.7.1 has been Released (4/17/2015)
+
+This was the initial release.
+
+## pyNastran v0.7.0 has been Released (4/17/2015)
+
+This was the initial release.
 
 ### pyNastran has Moved (3/12/2015)
 Google Code is  [closing down](http://google-opensource.blogspot.com/2015/03/farewell-to-google-code.html)

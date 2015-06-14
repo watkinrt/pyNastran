@@ -68,13 +68,9 @@ class WriteMesh(object):
             raise TypeError('out_filename=%r must be a string' % out_filename)
 
         if size == 8:
-            assert is_double == False, 'is_double=%r' % is_double
+            assert is_double is False, 'is_double=%r' % is_double
         elif size == 16:
             assert is_double in [True, False], 'is_double=%r' % is_double
-            if is_double == False:
-                assert is_double == False, 'is_double=%r' % is_double
-            else:
-                assert is_double == True, 'is_double=%r' % is_double
         else:
             assert size in [8, 16], size
 
@@ -443,6 +439,7 @@ class WriteMesh(object):
                               % (load.type, key))
                         raise
             outfile.write(''.join(msg))
+
         if self.dloads or self.dload_entries:
             msg = ['$DLOADS\n']
             for (key, loadcase) in sorted(iteritems(self.dloads)):
@@ -466,6 +463,7 @@ class WriteMesh(object):
 
 
     def _write_masses(self, outfile, size=8, is_double=False):
+        """Writes the mass cards sorted by ID"""
         if self.properties_mass:
             outfile.write('$PROPERTIES_MASS\n')
             for (pid, mass) in sorted(iteritems(self.properties_mass)):
@@ -540,6 +538,7 @@ class WriteMesh(object):
             msg.append('$NODES\n')
             if self.gridSet:
                 msg.append(self.gridSet.print_card(size))
+
             for (unused_nid, node) in sorted(iteritems(self.nodes)):
                 msg.append(node.write_card(size, is_double))
             outfile.write(''.join(msg))

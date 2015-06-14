@@ -854,19 +854,19 @@ class RealSolidStrain(StrainObject):
         msg += self.get_data_code()
         return msg
 
-    def add_f06_data(self, data, transient):
+    def add_f06_data(self, _f06_data, transient):
         if transient is None:
             if self._f06_data is None:
                 self._f06_data = []
-            self._f06_data += data
+            self._f06_data += _f06_data
         else:
+            dt = transient[1]
             if self._f06_data is None:
                 self._f06_data = {}
-            dt = transient[1]
             if dt not in self._f06_data:
                 self._f06_data[dt] = []
-            for line in data:
-                self._f06_data[dt] += data
+            self._f06_data[dt] += _f06_data
+            assert 'name' in self.data_code, self.data_code
 
     def processF06Data(self):
         """
@@ -972,7 +972,7 @@ class RealSolidStrain(StrainObject):
                     try:
                         (blank, node_id, x, oxx, txy, txy, a, o1, lx, d1, d2, d3, pressure, ovmShear) = f06_data[n]
                     except:
-                        print('strain; error reading %s; nnodes=%s' % (self.element_name, nnodes))
+                        print('strain; error reading %s; nnodes=%s\n%r' % (self.element_name, nnodes, f06_data[n]))
                         raise
 
                     (blank, blank, y, oyy, tyz, tyz, b, o2, ly, d1, d2, d3, blank, blank) = f06_data[n+1]
@@ -1128,10 +1128,10 @@ class RealSolidStrain(StrainObject):
 
     def ovm(self, o11, o22, o33, o12, o13, o23):
         """http://en.wikipedia.org/wiki/Von_Mises_yield_criterion"""
-        ovm = 0.5 * ((o11 - o22) ** 2 +
-                     (o22 - o33) ** 2 +
-                     (o11 - o33) ** 2 +
-                     6 * (o23 ** 2 + o13 ** 2 + o12 ** 2))
+        ovm = sqrt(0.5 * ((o11 - o22) ** 2 +
+                          (o22 - o33) ** 2 +
+                          (o11 - o33) ** 2 +
+                     6 * (o23 ** 2 + o13 ** 2 + o12 ** 2)))
         return ovm
 
     def octahedral(self, o11, o22, o33, o12, o13, o23):

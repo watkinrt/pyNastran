@@ -17,7 +17,13 @@ This code was written entirely in Python and should install easily.
 *** Not done....
 
 
------------------------v0.7.2 released 2015/04/xx-----------------------
+-----------------------v0.7.3 released 2015/06/??-----------------------
+   - CFAST doesn't crash for blank nodes
+   - renamed nlparm.id to nlparm.nlparm_id as it was obviously wrong
+   - renamed nlpci.nlparm_id to nlpci.nlpci_id as it was obviously wrong
+   - model.material_ids
+
+-----------------------v0.7.2 released 2015/04/25-----------------------
 Relase notes:
    - This is a bug fix release
    - improved documentation

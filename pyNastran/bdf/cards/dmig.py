@@ -1,12 +1,13 @@
 # pylint: disable=R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import integer_types
 from six.moves import zip, range
 from math import log, sin, cos, radians, atan2, sqrt, degrees
 #from math import (sin,sinh,cos,cosh,tan,tanh,sqrt,atan,atan2,acosh,acos,asin,
 #                  asinh,atanh) #,atanh2   # going to be used by DEQATN
 
-from numpy import zeros, abs  # average
+from numpy import array, zeros, abs  # average
 from scipy.sparse import coo_matrix
 
 from pyNastran.bdf.cards.baseCard import BaseCard
@@ -608,6 +609,7 @@ class DMI(NastranMatrix):
 
             self.nRows = integer(card, 7, 'nrows')
             self.nCols = integer(card, 8, 'ncols')
+
             assert len(card) == 9, 'len(DMI card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
@@ -618,6 +620,10 @@ class DMI(NastranMatrix):
 
         if self.is_complex():
             self.Complex = []
+
+    @property
+    def ifo(self):
+        return self.nRows == self.nCols
 
     def _add_column(self, card=None, data=None):
         if not self.is_complex():  # real
@@ -634,18 +640,19 @@ class DMI(NastranMatrix):
         # Real, starts at A(i1,j), goes to A(i2,j) in a column
         while i < len(fields):
             i1 = fields[i]
-            if isinstance(i1, int):
+            if isinstance(i1, integer_types):
                 i += 1
                 is_done_reading_floats = False
                 while not is_done_reading_floats and i < len(fields):
                     real_value = fields[i]
-                    if isinstance(real_value, int):
+                    if isinstance(real_value, integer_types):
                         is_done_reading_floats = True
                     elif isinstance(real_value, float):
                         self.GCj.append(j)
                         self.GCi.append(i1)
                         self.Real.append(real_value)
                         i += 1
+                        i1 += 1
                     else:
                         real_value = self.Real[-1]
                         endI = fields[i + 1]
@@ -653,7 +660,6 @@ class DMI(NastranMatrix):
                             self.GCj.append(j)
                             self.GCi.append(ii)
                             self.Real.append(real_value)
-
                         i += 1
                         is_done_reading_floats = True
 
@@ -662,11 +668,11 @@ class DMI(NastranMatrix):
         #raise NotImplementedError(msg)
         ## column number
         #j = integer(card, 2, 'icol')
-    ##
+
         ## counter
         #i = 0
-        #fields = [interpret_value(field) for field in card[3:] ]
-    ##
+        #fields = [interpret_value(field) for field in card[3:]]
+
         ## Complex, starts at A(i1,j)+imag*A(i1,j), goes to A(i2,j) in a column
         #while i < len(fields):
             #i1 = fields[i]
@@ -675,7 +681,7 @@ class DMI(NastranMatrix):
             #while not isDoneReadingFloats and i < len(fields):
                 ##print("i=%s len(fields)=%s" %(i, len(fields)))
                 #realValue = fields[i]
-                #if isinstance(floatValue, int):
+                #if isinstance(floatValue, integer_types):
                     #isDoneReadingFloats = True
                 #elif isinstance(realValue, float):
                     #complexValue = fields[i + 1]

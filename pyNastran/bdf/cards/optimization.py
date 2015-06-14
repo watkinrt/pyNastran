@@ -1,7 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
+from six import iteritems, integer_types
 from six.moves import zip, range
 #from math import ceil
 
@@ -31,8 +31,8 @@ class DCONSTR(OptConstraint):
         if card:
             self.oid = integer(card, 1, 'oid')
             self.rid = integer(card, 2, 'rid')
-            self.lid = double_or_blank(card, 3, 'lid', -1e20)
-            self.uid = double_or_blank(card, 4, 'uid', 1e20)
+            self.lid = integer_double_or_blank(card, 3, 'lid', -1e20)
+            self.uid = integer_double_or_blank(card, 4, 'uid', 1e20)
             self.lowfq = double_or_blank(card, 5, 'lowfq', 0.0)
             self.highfq = double_or_blank(card, 6, 'highfq', 1e20)
             assert len(card) <= 7, 'len(DCONSTR card) = %i' % len(card)
@@ -44,17 +44,35 @@ class DCONSTR(OptConstraint):
             self.lowfq = data[4]
             self.highfq = data[5]
 
+    def Rid(self):
+        if isinstance(self.rid, integer_types):
+            return self.rid
+        else:
+            return self.rid.oid
+
+    def Lid(self):
+        if isinstance(self.lid, integer_types) or isinstance(self.lid, float):
+            return self.lid
+        else:
+            return self.lid.tid
+
+    def Uid(self):
+        if isinstance(self.uid, integer_types) or isinstance(self.uid, float):
+            return self.uid
+        else:
+            return self.uid.tid
+
     def raw_fields(self):
-        list_fields = ['DCONSTR', self.oid, self.rid, self.lid,
-                       self.uid, self.lowfq, self.highfq]
+        list_fields = ['DCONSTR', self.oid, self.Rid(), self.Lid(),
+                       self.Uid(), self.lowfq, self.highfq]
         return list_fields
 
     def repr_fields(self):
-        lid = set_blank_if_default(self.lid, -1e20)
-        uid = set_blank_if_default(self.uid, 1e20)
+        lid = set_blank_if_default(self.Lid(), -1e20)
+        uid = set_blank_if_default(self.Uid(), 1e20)
         lowfq = set_blank_if_default(self.lowfq, 0.0)
         highfq = set_blank_if_default(self.highfq, 1e20)
-        list_fields = ['DCONSTR', self.oid, self.rid, lid, uid, lowfq, highfq]
+        list_fields = ['DCONSTR', self.oid, self.Rid(), lid, uid, lowfq, highfq]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -359,23 +377,22 @@ class DRESP2(OptConstraint):
         fields = [interpret_value(field) for field in card[9:]]
         key = '$NULL$'  # dummy key
         self.params = {key: []}
-        valueList = []
+        value_list = []
         for (i, field) in enumerate(fields):
             if i % 8 == 0 and field is not None:
-                self.params[key] = valueList
+                self.params[key] = value_list
                 key = field
-                valueList = []
+                value_list = []
             elif field is not None:
-                valueList.append(field)
+                value_list.append(field)
             #else:
             #    pass
-
-        self.params[key] = valueList
+        self.params[key] = value_list
         del self.params['$NULL$']
 
         #print "--Params--"
-        #for key, valueList in sorted(iteritems(self.params)):
-            #print("  key=%s params=%s" %(key, valueList))
+        #for key, value_list in sorted(iteritems(self.params)):
+            #print("  key=%s params=%s" %(key, value_list))
 
         #print self
 
@@ -393,18 +410,14 @@ class DRESP2(OptConstraint):
             'DVCREL2' : [1, 0],
             'DVMREL2' : [1, 0],
             'DRESP2' : [1, 0],
-            'DESVAR' : [1, 0],
-            'DESVAR' : [1, 0],
-            'DESVAR' : [1, 0],
-            'DESVAR' : [1, 0],
         }
         list_fields = []
-        for key, valueList in sorted(iteritems(self.params)):
-            fields2 = [key] + valueList
+        for key, value_list in sorted(iteritems(self.params)):
+            fields2 = [key] + value_list
             try:
                 (i, j) = packLength[key]
             except KeyError:
-                msg = 'INVALID DRESP2 key=%r fields=%s ID=%s' % (key, valueList, self.oid)
+                msg = 'INVALID DRESP2 key=%r fields=%s ID=%s' % (key, value_list, self.oid)
                 raise KeyError(msg)
             list_fields += build_table_lines(fields2, nstart=i, nend=j)
         return list_fields
@@ -517,7 +530,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         self.mid = model.Material(self.mid)
 
     def Mid(self):
-        if isinstance(self.mid, int):
+        if isinstance(self.mid, integer_types):
             return self.mid
         return self.mid.mid
 
@@ -594,7 +607,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         self.pid = model.Property(self.pid)
 
     def Pid(self):
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             return self.pid
         return self.pid.pid
 
@@ -712,7 +725,7 @@ class DVPREL2(OptConstraint):
                     self.labels.append(label)
 
     def Pid(self):
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             return self.pid
         return self.pid.pid
 
@@ -725,8 +738,8 @@ class DVPREL2(OptConstraint):
         self.pid = model.Property(self.pid)
         #self.eqID = model.DEquation(self.eqID)
 
-    def OptValue(self):  #: .. todo:: not implemented
-        self.pid.OptValue(self.pNameFid)
+    #def OptValue(self):  #: .. todo:: not implemented
+        #self.pid.OptValue(self.pNameFid)
 
     def raw_fields(self):
         list_fields = ['DVPREL2', self.oid, self.Type, self.Pid(),

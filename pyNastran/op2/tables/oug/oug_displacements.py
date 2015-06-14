@@ -161,6 +161,7 @@ class RealDisplacement(RealTableObject):  # approach_code=1, thermal=0
         label = '%-128s' % self.label
         ftable3 = '24i 128s 128s 128s'
         oCode = 0
+
         table3 = [
             aCode, tCode, 0, isubcase, lsdvmn,
             0, 0, random_code, format_code, num_wide,

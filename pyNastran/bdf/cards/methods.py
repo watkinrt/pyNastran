@@ -141,7 +141,7 @@ class EIGC(Method):
             #: Method of complex eigenvalue extraction
             self.method = string(card, 2, 'method')
             assert self.method in ['INV', 'HESS', 'CLAN'], (
-                'method=%s is not INV, HESS, CLAN' % (self.method))
+                'method=%s is not INV, HESS, CLAN' % self.method)
             #: Method for normalizing eigenvectors
             self.norm = string_or_blank(card, 3, 'norm')
             if self.norm == 'POINT':
@@ -185,8 +185,8 @@ class EIGC(Method):
         else:
             raise NotImplementedError('EIGC')
 
-    def loadCLAN(self, nRows, card):
-        for irow in range(nRows):
+    def loadCLAN(self, nrows, card):
+        for irow in range(nrows):
             #NDJ_default = None
             i = 9 + 8 * irow
             self.alphaAjs.append(
@@ -203,34 +203,34 @@ class EIGC(Method):
             self.NJIs.append(
                 integer(card, i + 6, 'NJI' + str(irow)))
 
-    def loadHESS_INV(self, nRows, card):
+    def loadHESS_INV(self, nrows, card):
         alphaOmega_default = None
         LJ_default = None
         if self.method == 'INV':
             alphaOmega_default = 0.0
             LJ_default = 1.0
 
-        for iRow in range(nRows):
-            NEj = integer(card, 9 + 7 * iRow + 5, 'NE%s' % str(iRow))
+        for irow in range(nrows):
+            NEj = integer(card, 9 + 7 * irow + 5, 'NE%s' % str(irow))
             NDJ_default = None
             if self.method == 'INV':
                 NDJ_default = 3 * NEj
 
-            i = 9 + 8 * iRow
+            i = 9 + 8 * irow
             self.alphaAjs.append(
-                double_or_blank(card, i, 'alphaA' + str(iRow), alphaOmega_default))
+                double_or_blank(card, i, 'alphaA' + str(irow), alphaOmega_default))
             self.omegaAjs.append(
-                double_or_blank(card, i + 1, 'omegaA' + str(iRow), alphaOmega_default))
+                double_or_blank(card, i + 1, 'omegaA' + str(irow), alphaOmega_default))
             self.alphaBjs.append(
-                double_or_blank(card, i + 2, 'alphaB' + str(iRow), alphaOmega_default))
+                double_or_blank(card, i + 2, 'alphaB' + str(irow), alphaOmega_default))
             self.omegaBjs.append(
-                double_or_blank(card, i + 3, 'omegaB' + str(iRow), alphaOmega_default))
+                double_or_blank(card, i + 3, 'omegaB' + str(irow), alphaOmega_default))
             self.LJs.append(
-                double_or_blank(card, i + 4, 'LJ' + str(iRow), LJ_default))
+                double_or_blank(card, i + 4, 'LJ' + str(irow), LJ_default))
             self.NEJs.append(
-                integer(card, i + 5, 'NEJ' + str(iRow)))
+                integer(card, i + 5, 'NEJ' + str(irow)))
             self.NDJs.append(
-                integer_or_blank(card, i + 6, 'NDJ' + str(iRow), NDJ_default))
+                integer_or_blank(card, i + 6, 'NDJ' + str(irow), NDJ_default))
 
     def cross_reference(self, model):
         pass

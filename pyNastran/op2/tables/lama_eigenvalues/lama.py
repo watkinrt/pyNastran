@@ -26,7 +26,7 @@ class LAMA(OP2Common):
                  '???', '???', '???', '???']
         #self.show_data(data)
 
-        (three) = self.parse_approach_code(data)
+        three = self.parse_approach_code(data)
 
         self.seven = self.add_data_parameter(data, 'seven', 'i', 10, False)  # seven
         ## residual vector augmentation flag
@@ -119,6 +119,7 @@ class LAMA(OP2Common):
         self._read_title(data)
 
     def _read_real_eigenvalue_4(self, data):
+        """parses the Real Eigenvalues Table 4 Data"""
         if self.read_mode == 1:
             return len(data)
         #self.show_data(data)
@@ -134,8 +135,8 @@ class LAMA(OP2Common):
             out = s.unpack(edata)
             if self.debug4():
                 self.binary_debug.write('  eigenvalue%s - %s\n' % (i, str(out)))
-            #(iMode, order, eigen, omega, freq, mass, stiff) = out
-            (modeNum, extractOrder, eigenvalue, radian, cycle, genM, genK) = out
+            #(imode, order, eigen, omega, freq, mass, stiff) = out
+            (imode, extractOrder, eigenvalue, radian, cycle, genM, genK) = out
             lama.addF06Line(out)
             n += ntotal
         return n

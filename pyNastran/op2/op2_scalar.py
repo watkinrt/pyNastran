@@ -41,12 +41,16 @@ class TrashWriter(object):
     A dummy file that just trashes all data
     """
     def __init__(self, *args, **kwargs):
+        """does nothing"""
         pass
     def open(self, *args, **kwargs):
+        """does nothing"""
         pass
     def write(self, *args, **kwargs):
+        """does nothing"""
         pass
     def close(self, *args, **kwargs):
+        """does nothing"""
         pass
 
 
@@ -106,6 +110,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.make_geom = False
 
     def set_as_vectorized(self, vectorized=False, ask=False):
+        """don't call this...testing"""
         if vectorized is True:
             msg = 'OP2_Scalar class doesnt support vectorization.  Use OP2 '
             msg += 'from pyNastran.op2.op2 instead.'
@@ -239,9 +244,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OGS1' : [self._read_ogs1_3, self._read_ogs1_4],  # grid point stresses
             #=======================
             # eigenvalues
-            b'BLAMA': [self._read_buckling_eigenvalue_3, self._read_buckling_eigenvalue_4],  # buckling eigenvalues
-            b'CLAMA': [self._read_complex_eigenvalue_3,  self._read_complex_eigenvalue_4],   # complex eigenvalues
-            b'LAMA' : [self._read_real_eigenvalue_3,     self._read_real_eigenvalue_4],      # eigenvalues
+            b'BLAMA': [self._read_buckling_eigenvalue_3, self._read_buckling_eigenvalue_4], # buckling eigenvalues
+            b'CLAMA': [self._read_complex_eigenvalue_3, self._read_complex_eigenvalue_4],   # complex eigenvalues
+            b'LAMA' : [self._read_real_eigenvalue_3, self._read_real_eigenvalue_4],         # eigenvalues
 
             # ===geom passers===
             # geometry
@@ -423,13 +428,21 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #asf
 
     def _not_available(self, data):
+        """testing function"""
         if len(data) > 0:
             raise RuntimeError('this should never be called...table_name=%r len(data)=%s' % (self.table_name, len(data)))
 
     def _table_passer(self, data):
+        """auto-table skipper"""
         return len(data)
 
     def _validate_op2_filename(self, op2_filename):
+        """
+        Pops a GUI if the op2_filename hasn't been set.
+
+        :param op2_filename:  the filename to check (None -> gui)
+        :returns op2_filename:  a valid file string
+        """
         if op2_filename is None:
             from pyNastran.utils.gui_io import load_file_dialog
             wildcard_wx = "Nastran OP2 (*.op2)|*.op2|" \
@@ -441,6 +454,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         return op2_filename
 
     def _create_binary_debug(self):
+        """
+        Instatiates the ``self.binary_debug`` variable/file
+        """
         if hasattr(self, 'binary_debug') and self.binary_debug is not None:
             self.binary_debug.close()
             del self.binary_debug
@@ -861,7 +877,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         #print "n=%s" % (self.n)
         #strings, ints, floats = self.show(100)
-        pass
 
     def _skip_pcompts(self):
         """
@@ -1098,6 +1113,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #raise NotImplementedError(self.table_name)
 
     def _read_intmod(self):
+        """reads the INTMOD table"""
         self.table_name = self.read_table_name(rewind=False)
         #self.log.debug('table_name = %r' % self.table_name)
         if self.debug:
@@ -1116,7 +1132,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #print('intmod data2')
         #self.show_data(data)
 
-        for n in [-3, -4, -5, -6, -7,-8,]:
+        for n in [-3, -4, -5, -6, -7, -8,]:
             self.read_markers([n, 1, 1])
             markers = self.get_nmarkers(1, rewind=False)
             #print('markers =', markers)
@@ -1133,6 +1149,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
 
     def _read_hisadd(self):
+        """preliminary reader for the HISADD table"""
         self.table_name = self.read_table_name(rewind=False)
         #self.log.debug('table_name = %r' % self.table_name)
         if self.debug:
@@ -1170,11 +1187,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             iconvergence = 'hard'
 
         if conv_result == 0:
-             conv_result = 'no'
+            conv_result = 'no'
         elif conv_result == 1:
-             conv_result = 'soft'
+            conv_result = 'soft'
         elif conv_result == 2:
-             conv_result = 'hard'
+            conv_result = 'hard'
 
         print('design_iter=%s iconvergence=%s conv_result=%s obj_intial=%s obj_final=%s constraint_max=%s row_constraint_max=%s desvar_value=%s' % (design_iter, iconvergence, conv_result, obj_intial, obj_final, constraint_max, row_constraint_max, desvar_value))
         self.show_data(datai[32:])
@@ -1192,10 +1209,19 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         n = -9
         self.read_markers([n, 1, 0, 0])
 
-    def get_marker_n(self, n):
+    def get_marker_n(self, nmarkers):
+        """
+        Gets N markers
+
+        A marker is a flag that is used.  It's a series of 3 ints (4, n, 4)
+        where n changes from marker to marker.
+
+        :param nmarkers:  the number of markers to read
+        :returns markers:  a list of nmarker integers
+        """
         markers = []
         s = Struct('3i')
-        for i in range(n):
+        for i in range(nmarkers):
             block = self.f.read(12)
             marker = s.unpack(block)
             markers.append(marker)
@@ -1204,7 +1230,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
     def _read_geom_table(self):
         """
         Reads a geometry table
-        :param self:    the OP2 object pointer
+
+        :param self:  the OP2 object pointer
         """
         self.table_name = self.read_table_name(rewind=False)
         if self.debug:
@@ -1215,7 +1242,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         if len(data) == 8:
-            table_name, = unpack(b'8s', data)
+            subtable_name, = unpack(b'8s', data)
         else:
             strings, ints, floats = self.show_data(data)
             msg = 'len(data) = %i\n' % len(data)

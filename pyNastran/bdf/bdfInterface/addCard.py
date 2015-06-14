@@ -120,41 +120,47 @@ class AddMethods(object):
             assert key > 0, 'pid=%s prop=%s' % (key, prop)
             self.properties_mass[key] = prop
 
+    def add_BCRPARA(self, card, allowOverwrites=False):
+        key = card.crid
+        self.bcrparas[key] = card
+
+    def add_BCTADD(self, card, allowOverwrites=False):
+        key = card.csid
+        self.bctadds[key] = card
+
+    def add_BCTPARA(self, card, allowOverwrites=False):
+        key = card.csid
+        self.bctparas[key] = card
+
+    def add_BCTSET(self, card, allowOverwrites=False):
+        key = card.csid
+        self.bctsets[key] = card
+
+    def add_BSURF(self, card, allowOverwrites=False):
+        key = card.sid
+        self.bsurf[key] = card
+
+    def add_BSURFS(self, card, allowOverwrites=False):
+        key = card.id
+        self.bsurfs[key] = card
+
+
     def add_PBUSHT(self, prop, allowOverwrites=False):
         key = prop.pid
-
         if key in self.pbusht and not allowOverwrites:
             if not prop._is_same_card(self.pbusht[key]):
-                #print('pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.pbusht[key],prop))
-                assert key not in self.pbusht, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (key, self.pbusht[key], prop)
+                assert key not in self.pbusht, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (
+                    key, self.pbusht[key], prop)
         else:
             assert key > 0, 'pid=%s prop=%s' % (key, prop)
             self.pbusht[key] = prop
-
-    def add_BCRPARA(self, card, allowOverwrites=False):
-        self.bcrparas[card.crid] = card
-
-    def add_BCTADD(self, card, allowOverwrites=False):
-        self.bctadds[card.csid] = card
-
-    def add_BCTPARA(self, card, allowOverwrites=False):
-        self.bctparas[card.csid] = card
-
-    def add_BCTSET(self, card, allowOverwrites=False):
-        self.bctsets[card.csid] = card
-
-    def add_BSURF(self, card, allowOverwrites=False):
-        self.bsurf[card.sid] = card
-
-    def add_BSURFS(self, card, allowOverwrites=False):
-        self.bsurfs[card.id] = card
-
+			
     def add_PDAMPT(self, prop, allowOverwrites=False):
         key = prop.pid
         if key in self.pdampt and not allowOverwrites:
             if not prop._is_same_card(self.pdampt[key]):
-                #print('pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.pdampt[key],prop))
-                assert key not in self.pdampt, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (key, self.pdampt[key], prop)
+                assert key not in self.pdampt, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (
+                    key, self.pdampt[key], prop)
         else:
             assert key > 0, 'pid=%s prop=%s' % (key, prop)
             self.pdampt[key] = prop
@@ -164,10 +170,11 @@ class AddMethods(object):
         assert key > 0, 'pid=%s prop=%s' % (key, prop)
         if key in self.pelast and not allowOverwrites:
             if not prop._is_same_card(self.pelast[key]):
-                #print('pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.pdampt[key],prop))
-                assert key not in self.pelast, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (key, self.pelast[key], prop)
+                #print('pid=%s\noldProperty=\n%snewProperty=\n%s' % (key, self.pelast[key],prop))
+                assert key not in self.pelast, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (
+                    key, self.pelast[key], prop)
         else:
-            self.pdampt[key] = prop
+            self.pelast[key] = prop
 
     def add_structural_material(self, material, allowOverwrites=False):
         key = material.mid
@@ -250,20 +257,19 @@ class AddMethods(object):
         else:
             self.loads[key] = [load]
 
-    def add_dload(self, dload):
-        key = dload.sid
+    def add_dload(self, load):
+        key = load.sid
         if key in self.dloads:
-            self.dloads[key].append(dload)
+            self.dloads[key].append(load)
         else:
-            self.dloads[key] = [dload]
+            self.dloads[key] = [load]
 
-    def add_dload_entry(self, dload):
-        print(dload)
-        key = dload.sid
+    def add_dload_entry(self, load):
+        key = load.sid
         if key in self.dload_entries:
-            self.dload_entries[key].append(dload)
+            self.dload_entries[key].append(load)
         else:
-            self.dload_entries[key] = [dload]
+            self.dload_entries[key] = [load]
 
     def add_LSEQ(self, load):
         key = load.sid
@@ -274,21 +280,23 @@ class AddMethods(object):
 
     def add_thermal_load(self, load):  # same function at the moment...
         key = load.sid
-        assert key > 0
+        assert key > 0, key
         if key in self.loads:
             self.loads[key].append(load)
         else:
             self.loads[key] = [load]
 
     def add_PHBDY(self, prop):
-        assert prop.pid > 0
-        assert prop.pid not in self.phbdys
-        self.phbdys[prop.pid] = prop
+        key = prop.pid
+        assert key > 0, key
+        assert key not in self.phbdys, key
+        self.phbdys[key] = prop
 
     def add_convection_property(self, prop):
-        assert prop.pconid > 0
-        assert prop.pconid not in self.convectionProperties
-        self.convectionProperties[prop.pconid] = prop
+        key = prop.pconid
+        assert key > 0, key
+        assert key not in self.convectionProperties, key
+        self.convectionProperties[key] = prop
 
     def add_thermal_BC(self, bc, key):
         assert key > 0
@@ -298,31 +306,34 @@ class AddMethods(object):
             self.bcs[key] = [bc]
 
     def add_constraint_MPCADD(self, constraint):
-        if constraint.conid in self.mpcadds:
+        key = constraint.conid
+        if key in self.mpcadds:
             raise RuntimeError('must have unique MPCADD IDs')
-        self.mpcadds[constraint.conid] = constraint
+        self.mpcadds[key] = constraint
 
     def add_constraint_MPC(self, constraint):
-        if constraint.conid in self.mpcs:
-            self.mpcs[constraint.conid].append(constraint)
+        key = constraint.conid
+        if key in self.mpcs:
+            self.mpcs[key].append(constraint)
         else:
-            self.mpcs[constraint.conid] = [constraint]
+            self.mpcs[key] = [constraint]
 
     def add_constraint_SPCADD(self, constraint):
-        if constraint.conid in self.spcadds:
+        key = constraint.conid
+        if key in self.spcadds:
             raise RuntimeError('must have unique SPCADD IDs')
-        self.spcadds[constraint.conid] = constraint
+        self.spcadds[key] = constraint
 
     def add_constraint_SPC(self, constraint):
-        if constraint.conid in self.spcs:
-            self.spcs[constraint.conid].append(constraint)
+        key = constraint.conid
+        if key in self.spcs:
+            self.spcs[key].append(constraint)
         else:
-            self.spcs[constraint.conid] = [constraint]
+            self.spcs[key] = [constraint]
 
     def add_constraint(self, constraint):
         key = constraint.conid
-
-        if constraint.conid in self.spcs:
+        if key in self.spcs:
             self.spcs[key].append(constraint)
         else:
             self.spcs[key] = [constraint]
@@ -374,6 +385,12 @@ class AddMethods(object):
         self.aelinks[key].append(aelink)
         #assert key not in self.aestats,'\naestat=%s oldAESTAT=\n%s' %(aestat,self.aestats[key])
 
+    def add_AECOMP(self, aecomp):
+        key = aecomp.name
+        assert key not in self.aecomps, '\naecomp=\n%s oldAECOMP=\n%s' % (aeparam, self.aecomps[key])
+        assert key >= 0
+        self.aecomps[key] = aecomp
+
     def add_AEPARM(self, aeparam):
         key = aeparam.id
         assert key not in self.aeparams, '\naeparam=\n%s oldAEPARM=\n%s' % (aeparam, self.aeparams[key])
@@ -411,7 +428,8 @@ class AddMethods(object):
     def add_SPLINE(self, spline):
         assert spline.eid not in self.splines
         assert spline.eid > 0
-        self.splines[spline.eid] = spline
+        key = spline.eid
+        self.splines[key] = spline
 
     def add_GUST(self, gust):
         key = gust.sid
@@ -482,13 +500,13 @@ class AddMethods(object):
         self.dvprels[key] = dvprel
 
     def add_NLPARM(self, nlparm):
-        key = nlparm.nid
+        key = nlparm.nlparm_id
         assert key not in self.nlparms
         assert key > 0
         self.nlparms[key] = nlparm
 
     def add_NLPCI(self, nlpci):
-        key = nlpci.nlparm_id
+        key = nlpci.nlpci_id
         assert key not in self.nlpcis
         assert key > 0
         self.nlpcis[key] = nlpci
@@ -570,14 +588,14 @@ class AddMethods(object):
             assert key > 0, 'sid=%s method=\n%s' % (key, method)
             self.methods[key] = method
 
-    def add_cmethod(self, cMethod, allowOverwrites=False):
-        key = cMethod.sid
+    def add_cmethod(self, method, allowOverwrites=False):
+        key = method.sid
         if key in self.cMethods and not allowOverwrites:
-            if not cMethod._is_same_card(self.cMethods[key]):
-                assert key not in self.cMethods, 'sid=%s\noldCMethod=\n%snewCMethod=\n%s' % (key, self.cMethods[key], cMethod)
+            if not method._is_same_card(self.cMethods[key]):
+                assert key not in self.cMethods, 'sid=%s\noldCMethod=\n%snewCMethod=\n%s' % (key, self.cMethods[key], method)
         else:
-            assert key > 0, 'sid=%s cMethod=\n%s' % (key, cMethod)
-            self.cMethods[key] = cMethod
+            assert key > 0, 'sid=%s cMethod=\n%s' % (key, method)
+            self.cMethods[key] = method
 
     def add_MKAERO(self, mkaero):
         self.mkaeros.append(mkaero)

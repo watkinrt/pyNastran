@@ -18,6 +18,7 @@ All quads are QuadShell, ShellElement, and Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import integer_types
 from six.moves import range
 
 from numpy import array, eye, cross, allclose
@@ -252,9 +253,11 @@ class CTRIA3(TriShell):
             #: Property ID
             self.pid = integer_or_blank(card, 2, 'pid', self.eid)
 
-            nids = [integer(card, 3, 'n1'),
-                    integer(card, 4, 'n2'),
-                    integer(card, 5, 'n3')]
+            nids = [
+                integer(card, 3, 'n1'),
+                integer(card, 4, 'n2'),
+                integer(card, 5, 'n3')
+            ]
 
             self.thetaMcid = integer_double_or_blank(card, 6, 'thetaMcid', 0.0)
             self.zOffset = double_or_blank(card, 7, 'zOffset', 0.0)
@@ -289,18 +292,18 @@ class CTRIA3(TriShell):
 
     def cross_reference(self, model):
         msg = ' which is required by CTRIA3 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
+        self.nodes = model.Nodes(self.node_ids, msg=msg)
+        self.pid = model.Property(self.Pid(), msg=msg)
 
     def _verify(self, xref=True):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.node_ids
 
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         for i, nid in enumerate(nids):
-            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+            assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
             assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
@@ -376,7 +379,7 @@ class CTRIA3(TriShell):
         #detJ = J.det()
         return J
 
-    def getReprDefaults(self):
+    def _get_repr_defaults(self):
         zOffset = set_blank_if_default(self.zOffset, 0.0)
         TFlag = set_blank_if_default(self.TFlag, 0)
         thetaMcid = set_blank_if_default(self.thetaMcid, 0.0)
@@ -393,10 +396,6 @@ class CTRIA3(TriShell):
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
 
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
-
     def raw_fields(self):
         list_fields = (['CTRIA3', self.eid, self.Pid()] + self.node_ids +
                        [self.thetaMcid, self.zOffset, None] +
@@ -404,7 +403,7 @@ class CTRIA3(TriShell):
         return list_fields
 
     def repr_fields(self):
-        (thetaMcid, zOffset, TFlag, T1, T2, T3) = self.getReprDefaults()
+        (thetaMcid, zOffset, TFlag, T1, T2, T3) = self._get_repr_defaults()
         list_fields = (['CTRIA3', self.eid, self.Pid()] + self.node_ids +
                        [thetaMcid, zOffset, None] + [None, TFlag, T1, T2, T3])
         return list_fields
@@ -428,15 +427,6 @@ class CTRIA3(TriShell):
                '                %8s%8s%8s%8s\n' % tuple(data))
         return self.comment() + msg.rstrip() + '\n'
 
-    #def write_card(self, size=8, is_double=False):
-        #card = wipe_empty_fields(self.repr_fields())
-        #if size == 8 or len(card) == 6: # to last node
-            #msg = self.comment() + print_card_8(card)
-        #else:
-            #msg = self.comment() + print_card_16(card)
-        #msg2 = self.write_card(size)
-        #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
-        #return msg
 
 class CTRIA6(TriShell):
     type = 'CTRIA6'
@@ -453,12 +443,14 @@ class CTRIA6(TriShell):
             #: Property ID
             self.pid = integer(card, 2, 'pid')
 
-            nids = [integer(card, 3, 'n1'),
-                    integer(card, 4, 'n2'),
-                    integer(card, 5, 'n3'),
-                    integer_or_blank(card, 6, 'n4', 0),
-                    integer_or_blank(card, 7, 'n5', 0),
-                    integer_or_blank(card, 8, 'n6', 0)]
+            nids = [
+                integer(card, 3, 'n1'),
+                integer(card, 4, 'n2'),
+                integer(card, 5, 'n3'),
+                integer_or_blank(card, 6, 'n4', 0),
+                integer_or_blank(card, 7, 'n5', 0),
+                integer_or_blank(card, 8, 'n6', 0)
+            ]
 
             self.thetaMcid = integer_double_or_blank(card, 9, 'thetaMcid', 0.0)
             self.zOffset = double_or_blank(card, 10, 'zOffset', 0.0)
@@ -481,26 +473,20 @@ class CTRIA6(TriShell):
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(nids) == 6, 'error on CTRIA6'
 
-        #print self.thetaMcid
-        #print card
-
-        #print "self.xi = ",self.xi
-        #raise
-
     def cross_reference(self, model):
         msg = ' which is required by CTRIA6 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
+        self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.Pid(), msg=msg)
 
     def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.node_ids
 
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
-        #for i,nid in enumerate(nids):
-            #assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
+        for i, nid in enumerate(nids):
+            assert isinstance(nid, integer_types) or nid is None, 'nid%i is not an integer/None; nid=%s' %(i, nid)
 
         if xref:
             assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
@@ -575,7 +561,7 @@ class CTRIA6(TriShell):
         (n1, n2, n3, n4, n5, n6) = self.nodes
         self.nodes = [n1, n3, n2, n6, n5, n4]
 
-    def getReprDefaults(self):
+    def _get_repr_defaults(self):
         zOffset = set_blank_if_default(self.zOffset, 0.0)
         TFlag = set_blank_if_default(self.TFlag, 0)
         thetaMcid = set_blank_if_default(self.thetaMcid, 0.0)
@@ -592,10 +578,6 @@ class CTRIA6(TriShell):
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
-
     def raw_fields(self):
         list_fields = (['CTRIA6', self.eid, self.Pid()] + self.node_ids +
                        [self.thetaMcid, self.zOffset, None] + [None, self.TFlag,
@@ -603,7 +585,7 @@ class CTRIA6(TriShell):
         return list_fields
 
     def repr_fields(self):
-        (thetaMcid, zOffset, TFlag, T1, T2, T3) = self.getReprDefaults()
+        (thetaMcid, zOffset, TFlag, T1, T2, T3) = self._get_repr_defaults()
         list_fields = (['CTRIA6', self.eid, self.Pid()] + self.node_ids +
                        [thetaMcid, zOffset, None] + [None, TFlag, T1, T2, T3])
         return list_fields
@@ -659,10 +641,10 @@ class CTRIAR(TriShell):
         #pid = self.Pid()
         #nids = self.node_ids
 
-        #assert isinstance(eid, int)
-        #assert isinstance(pid, int)
+        #assert isinstance(eid, integer_types)
+        #assert isinstance(pid, integer_types)
         #for i,nid in enumerate(nids):
-            #assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+            #assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         #if xref:
             #assert self.pid.type in ['PSHELL', 'PCOMP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
@@ -690,7 +672,7 @@ class CTRIAR(TriShell):
         (n1, n2, n3) = self.nodes
         self.nodes = [n1, n3, n2]
 
-    def getReprDefaults(self):
+    def _get_repr_defaults(self):
         zOffset = set_blank_if_default(self.zOffset, 0.0)
         TFlag = set_blank_if_default(self.TFlag, 0)
         thetaMcid = set_blank_if_default(self.thetaMcid, 0.0)
@@ -705,10 +687,10 @@ class CTRIAR(TriShell):
         pid = self.Pid()
         nids = self.node_ids
 
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         #for i,nid in enumerate(nids):
-            #assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+            #assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
             # PSHELL/PCOMP
@@ -730,10 +712,6 @@ class CTRIAR(TriShell):
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
 
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
-
     def raw_fields(self):
         list_fields = (['CTRIAR', self.eid, self.Pid()] + self.node_ids +
                        [self.thetaMcid, self.zOffset, self.TFlag,
@@ -741,7 +719,7 @@ class CTRIAR(TriShell):
         return list_fields
 
     def repr_fields(self):
-        (thetaMcid, zOffset, TFlag, T1, T2, T3) = self.getReprDefaults()
+        (thetaMcid, zOffset, TFlag, T1, T2, T3) = self._get_repr_defaults()
         list_fields = (['CTRIAR', self.eid, self.Pid()] + self.node_ids +
                        [thetaMcid, zOffset, None, None, TFlag, T1, T2, T3])
         return list_fields
@@ -786,13 +764,13 @@ class CTRIAX(TriShell):
         pid = self.Pid()
         nids = self.node_ids
 
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         for i, nid in enumerate(nids):
             if i < 3:
-                assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+                assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
             else:
-                assert isinstance(nid, int) or nid is None, 'nid%i is not an integer or None nid=%s' %(i, nid)
+                assert isinstance(nid, integer_types) or nid is None, 'nid%i is not an integer or None nid=%s' %(i, nid)
 
         if xref:
             assert self.pid.type in ['PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
@@ -838,13 +816,8 @@ class CTRIAX(TriShell):
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
-
     def raw_fields(self):
-        nodeIDs = self.node_ids
-        list_fields = ['CTRIAX', self.eid, self.Pid()] + nodeIDs + [self.thetaMcid]
+        list_fields = ['CTRIAX', self.eid, self.Pid()] + self.node_ids + [self.thetaMcid]
         return list_fields
 
     def repr_fields(self):
@@ -886,12 +859,14 @@ class CTRIAX6(TriShell):
             #: Material ID
             self.mid = integer(card, 2, 'mid')
 
-            nids = [integer(card, 3, 'n1'),
-                    integer_or_blank(card, 4, 'n2'),
-                    integer(card, 5, 'n3'),
-                    integer_or_blank(card, 6, 'n4'),
-                    integer(card, 7, 'n5'),
-                    integer_or_blank(card, 8, 'n6')]
+            nids = [
+                integer(card, 3, 'n1'),
+                integer_or_blank(card, 4, 'n2'),
+                integer(card, 5, 'n3'),
+                integer_or_blank(card, 6, 'n4'),
+                integer(card, 7, 'n5'),
+                integer_or_blank(card, 8, 'n6')
+            ]
 
             #: theta
             self.theta = double_or_blank(card, 9, 'theta', 0.0)
@@ -908,22 +883,14 @@ class CTRIAX6(TriShell):
 
     def _verify(self, xref=True):
         eid = self.Eid()
-        #pid = self.Pid()
         nids = self.node_ids
         assert self.pid == 0, 'pid = %s' % self.pid
-        assert isinstance(eid, int)
-        #assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
         for i, nid in enumerate(nids):
-            assert nid is None or isinstance(nid, int), 'nid%i is not an integer or blank; nid=%s' %(i, nid)
+            assert nid is None or isinstance(nid, integer_types), 'nid%i is not an integer or blank; nid=%s' %(i, nid)
 
         if xref:
-            assert self.mid.type in ['MAT1'], 'self.mid=%s self.mid.type=%s' % (self.mid, self.mid.type)
-            #assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
-            #if not self.pid.type in ['PLPLANE']:
-                #t = self.Thickness()
-                #assert isinstance(t, float), 'thickness=%r' % t
-                #mass = self.Mass()
-                #assert isinstance(mass, float), 'mass=%r' % mass
+            assert self.mid.type in ['MAT1', 'MAT3', 'MAT4'], 'self.mid=%s self.mid.type=%s' % (self.mid, self.mid.type)
             a, c, n = self.AreaCentroidNormal()
             assert isinstance(a, float), 'Area=%r' % a
             for i in range(3):
@@ -968,7 +935,7 @@ class CTRIAX6(TriShell):
         raise NotImplementedError('CTRIAX6 does not have a Mass method yet')
 
     def Mid(self):
-        if isinstance(self.mid, int):
+        if isinstance(self.mid, integer_types):
             return self.mid
         return self.mid.mid
 
@@ -1135,7 +1102,7 @@ class QuadShell(ShellElement):
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
 
-    def getReprDefaults(self):
+    def _get_repr_defaults(self):
         zOffset = set_blank_if_default(self.zOffset, 0.0)
         TFlag = set_blank_if_default(self.TFlag, 0)
         thetaMcid = set_blank_if_default(self.thetaMcid, 0.0)
@@ -1190,8 +1157,8 @@ class CSHEAR(QuadShell):
 
     def cross_reference(self, model):
         msg = ' which is required by CSHEAR eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
+        self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.Pid(), msg=msg)
 
     def Normal(self):
         (n1, n2, n3, n4) = self.nodePositions()
@@ -1244,10 +1211,10 @@ class CSHEAR(QuadShell):
         pid = self.Pid()
         nids = self.node_ids
 
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         for i, nid in enumerate(nids):
-            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+            assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
             assert self.pid.type in ['PSHEAR'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
@@ -1390,10 +1357,10 @@ class CQUAD4(QuadShell):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.node_ids
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         for i, nid in enumerate(nids):
-            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+            assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
             assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
@@ -1427,10 +1394,6 @@ class CQUAD4(QuadShell):
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
 
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
-
     def writeAsCTRIA3(self, newID):
         """
         triangle - 012
@@ -1452,7 +1415,7 @@ class CQUAD4(QuadShell):
         return list_fields
 
     def repr_fields(self):
-        (thetaMcid, zOffset, TFlag, T1, T2, T3, T4) = self.getReprDefaults()
+        (thetaMcid, zOffset, TFlag, T1, T2, T3, T4) = self._get_repr_defaults()
         list_fields = (['CQUAD4', self.eid, self.Pid()] + self.node_ids +
                        [thetaMcid, zOffset, None, TFlag, T1, T2, T3, T4])
         return list_fields
@@ -1547,10 +1510,10 @@ class CQUADR(QuadShell):
         pid = self.Pid()
         nids = self.node_ids
 
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
         #for i,nid in enumerate(nids):
-            #assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+            #assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
             assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
@@ -1600,7 +1563,7 @@ class CQUADR(QuadShell):
         return list_fields
 
     def repr_fields(self):
-        (thetaMcid, zOffset, TFlag, T1, T2, T3, T4) = self.getReprDefaults()
+        (thetaMcid, zOffset, TFlag, T1, T2, T3, T4) = self._get_repr_defaults()
         list_fields = (['CQUADR', self.eid, self.Pid()] + self.node_ids +
                        [thetaMcid, zOffset, None, TFlag, T1, T2, T3, T4])
         return list_fields
@@ -1671,10 +1634,6 @@ class CQUAD(QuadShell):
     @property
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def raw_fields(self):
         list_fields = ['CQUAD', self.eid, self.Pid()] + self.node_ids
@@ -1753,21 +1712,21 @@ class CQUAD8(QuadShell):
 
     def cross_reference(self, model):
         msg = ' which is required by CQUAD8 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
+        self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.Pid(), msg=msg)
 
     def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.node_ids
 
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
-        #for i,nid in enumerate(nids):
-            #assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
+        for i,nid in enumerate(nids):
+            assert isinstance(nid, integer_types) or nid is None, 'nid%i is not an integer/None; nid=%s' %(i, nid)
 
         if xref:
-            assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
             t = self.Thickness()
             a, c, n = self.AreaCentroidNormal()
             assert isinstance(t, float), 'thickness=%r' % t
@@ -1850,10 +1809,6 @@ class CQUAD8(QuadShell):
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
-
     def raw_fields(self):
         list_fields = ['CQUAD8', self.eid, self.Pid()] + self.node_ids + [
             self.T1, self.T2, self.T3, self.T4, self.thetaMcid, self.zOffset,
@@ -1861,7 +1816,7 @@ class CQUAD8(QuadShell):
         return list_fields
 
     def repr_fields(self):
-        (thetaMcid, zOffset, TFlag, T1, T2, T3, T4) = self.getReprDefaults()
+        (thetaMcid, zOffset, TFlag, T1, T2, T3, T4) = self._get_repr_defaults()
         list_fields = (['CQUAD8', self.eid, self.Pid()] + self.node_ids + [
             T1, T2, T3, T4, thetaMcid, zOffset, TFlag])
         return list_fields
@@ -1886,15 +1841,17 @@ class CQUADX(QuadShell):
             self.eid = integer(card, 1, 'eid')
             #: Property ID
             self.pid = integer(card, 2, 'pid')
-            nids = [integer_or_blank(card, 3, 'n1'),
-                    integer_or_blank(card, 4, 'n2'),
-                    integer_or_blank(card, 5, 'n3'),
-                    integer_or_blank(card, 6, 'n4'),
-                    integer_or_blank(card, 7, 'n5'),
-                    integer_or_blank(card, 8, 'n6'),
-                    integer_or_blank(card, 9, 'n7'),
-                    integer_or_blank(card, 10, 'n8'),
-                    integer_or_blank(card, 11, 'n9')]
+            nids = [
+                integer_or_blank(card, 3, 'n1'),
+                integer_or_blank(card, 4, 'n2'),
+                integer_or_blank(card, 5, 'n3'),
+                integer_or_blank(card, 6, 'n4'),
+                integer_or_blank(card, 7, 'n5'),
+                integer_or_blank(card, 8, 'n6'),
+                integer_or_blank(card, 9, 'n7'),
+                integer_or_blank(card, 10, 'n8'),
+                integer_or_blank(card, 11, 'n9')
+            ]
             assert len(card) <= 12, 'len(CQUADX card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
@@ -1903,8 +1860,8 @@ class CQUADX(QuadShell):
 
     def cross_reference(self, model):
         msg = ' which is required by CQUADX eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
+        self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.Pid(), msg=msg)
 
     def Thickness(self):
         """
@@ -1932,10 +1889,6 @@ class CQUADX(QuadShell):
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
-
     def raw_fields(self):
         list_fields = ['CQUADX', self.eid, self.Pid()] + self.node_ids
         return list_fields
@@ -1950,4 +1903,3 @@ class CQUADX(QuadShell):
         msg = ('CQUADX  %8i%8i%8i%8i%8i%8i%8s%8s\n'
                '        %8s%8s%8s' % tuple(data + row2))
         return self.comment() + msg.rstrip() + '\n'
-

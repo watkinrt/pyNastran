@@ -22,6 +22,7 @@ All cards are BaseCard objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import integer_types
 from six.moves import zip, range
 from itertools import count
 from numpy import array, pi, linspace, zeros, arange, repeat, dot, cos, arcsin
@@ -195,6 +196,9 @@ class AELIST(BaseCard):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
+    def cross_reference(self, model):
+        pass
+
     def clean_ids(self):
         self.elements = list(set(self.elements))
         self.elements.sort()
@@ -296,6 +300,9 @@ class AESTAT(BaseCard):
             self.label = data[1]
             assert len(data) == 2, 'data = %s' % data
 
+    def cross_reference(self, model):
+        pass
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -387,6 +394,26 @@ class AESURF(BaseCard):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
+    def Cid1(self):
+        if isinstance(self.cid1, integer_types):
+            return self.cid1
+        return self.cid1.cid
+
+    def Cid2(self):
+        if isinstance(self.cid2, integer_types) or self.cid2 is None:
+            return self.cid2
+        return self.cid2.cid
+
+    def AELIST_id1(self):
+        if isinstance(self.alid1, integer_types):
+            return self.alid1
+        return self.alid1.sid
+
+    def AELIST_id2(self):
+        if isinstance(self.alid2, integer_types) or self.alid2 is None:
+            return self.alid2
+        return self.alid2.sid
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -398,8 +425,8 @@ class AESURF(BaseCard):
         :type fields:
           LIST
         """
-        list_fields = ['AESURF', self.aesid, self.label, self.cid1, self.alid1,
-                       self.cid2, self.alid2, self.eff, self.ldw,
+        list_fields = ['AESURF', self.aesid, self.label, self.Cid1(), self.AELIST_id1(),
+                       self.Cid2(), self.AELIST_id2(), self.eff, self.ldw,
                        self.crefc, self.crefs, self.pllim, self.pulim, self.hmllim,
                        self.hmulim, self.tqllim, self.tqulim]
         return list_fields
@@ -423,8 +450,8 @@ class AESURF(BaseCard):
         pllim = set_blank_if_default(self.pllim, -pi / 2.)
         pulim = set_blank_if_default(self.pulim, pi / 2.)
 
-        list_fields = ['AESURF', self.aesid, self.label, self.cid1, self.alid1,
-                       self.cid2, self.alid2, eff, ldw, crefc, crefs,
+        list_fields = ['AESURF', self.aesid, self.label, self.Cid1(), self.AELIST_id1(),
+                       self.Cid2(), self.AELIST_id2(), eff, ldw, crefc, crefs,
                        pllim, pulim, self.hmllim, self.hmulim, self.tqllim,
                        self.tqulim]
         return list_fields
@@ -692,7 +719,7 @@ class CSSCHD(BaseCard):
     | CSSCHD | SlD | AESID | LALPHA | LMACH | LSCHD |
     +--------+-----+-------+--------+-------+-------+
     """
-    type = 'ASSCHD'
+    type = 'CSSCHD'
     _field_map = {
         1: 'sid', 2:'aesid', 3:'lAlpha', 4:'lMach', 5:'lSchd',
     }
@@ -730,22 +757,22 @@ class CSSCHD(BaseCard):
         self.lSchd = model.AEFact(self.lSchd, msg=msg)
 
     def AESid(self):
-        if isinstance(self.aesid, int):
+        if isinstance(self.aesid, integer_types):
             return self.aesid
         return self.aesid.aesid
 
     def LAlpha(self):
-        if isinstance(self.lAlpha, int):
+        if isinstance(self.lAlpha, integer_types):
             return self.lAlpha
         return self.lAlpha.sid
 
     def LMach(self):
-        if isinstance(self.lMach, int):
+        if isinstance(self.lMach, integer_types):
             return self.lMach
         return self.lMach.sid
 
     def LSchd(self):
-        if isinstance(self.lSchd, int):
+        if isinstance(self.lSchd, integer_types):
             return self.lSchd
         return self.lSchd.sid
 
@@ -905,12 +932,12 @@ class CAERO1(BaseCard, CAERO1Deprecated):
             raise NotImplementedError(msg)
 
     def Cp(self):
-        if isinstance(self.cp, int):
+        if isinstance(self.cp, integer_types):
             return self.cp
         return self.cp.cid
 
     def Pid(self):
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             return self.pid
         return self.pid.pid
 
@@ -926,13 +953,19 @@ class CAERO1(BaseCard, CAERO1Deprecated):
         self.pid = model.PAero(self.pid, msg=msg)
         self.cp = model.Coord(self.cp, msg=msg)
         if self.nchord == 0:
-            assert isinstance(self.lchord, int), self.lchord
+            assert isinstance(self.lchord, integer_types), self.lchord
             self.lchord = model.AEFact(self.lchord, msg)
         if self.nspan == 0:
-            assert isinstance(self.lspan, int), self.lspan
+            assert isinstance(self.lspan, integer_types), self.lspan
             self.lspan = model.AEFact(self.lspan, msg)
 
     def get_points(self):
+        """
+        Get the 4 corner points for the CAERO card
+
+        :param self: the CAERO object
+        :returns p1234: list for 4 points; a point is a (3,) ndarray
+        """
         p1, matrix = self.cp.transformToGlobal(self.p1)
         p4, matrix = self.cp.transformToGlobal(self.p4)
         p2 = p1 + array([self.x12, 0., 0.])
@@ -940,6 +973,14 @@ class CAERO1(BaseCard, CAERO1Deprecated):
         return [p1, p2, p3, p4]
 
     def get_npanel_points_elements(self):
+        """
+        Gets the number of sub-points and sub-elements for the CAERO card
+
+        :param self: the CAERO object
+
+        :param npoints: the number of nodes for the CAERO
+        :param nelements: the number of elements for the CAERO
+        """
         msg = '%s eid=%s nchord=%s nspan=%s lchord=%s lspan=%s' % (self.type,
                                                                    self.eid,
                                                                    self.nchord,
@@ -965,15 +1006,19 @@ class CAERO1(BaseCard, CAERO1Deprecated):
         return npoints, nelements
 
     def panel_points_elements(self):
-        p1, p2, p3, p4 = self.Points()
+        """
+        Gets the sub-points and sub-elements for the CAERO card
 
+        :param points: an (nnodes,3) ndarray of floats
+        :param elements: an (nelements,4) ndarray of integers
+        """
+        p1, p2, p3, p4 = self.Points()
         msg = '%s eid=%s nchord=%s nspan=%s lchord=%s lspan=%s' % (self.type,
                                                                    self.eid,
                                                                    self.nchord,
                                                                    self.nspan,
                                                                    self.lchord,
                                                                    self.lspan)
-
         if self.nchord == 0:
             x = self.lchord.Di
             nchord = len(x) - 1
@@ -1019,12 +1064,12 @@ class CAERO1(BaseCard, CAERO1Deprecated):
         return list_fields
 
     def get_LChord(self):
-        if isinstance(self.lchord, int):
+        if isinstance(self.lchord, integer_types):
             return self.lchord
         return self.lchord.sid
 
     def get_LSpan(self):
-        if isinstance(self.lspan, int):
+        if isinstance(self.lspan, integer_types):
             return self.lspan
         return self.lspan.sid
 
@@ -1170,17 +1215,17 @@ class CAERO2(BaseCard, CAERO2Deprecated):
             raise NotImplementedError(msg)
 
     def Cp(self):
-        if isinstance(self.cp, int):
+        if isinstance(self.cp, integer_types):
             return self.cp
         return self.cp.cid
 
     def Pid(self):
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             return self.pid
         return self.pid.pid
 
     def Lsb(self):  # AEFACT
-        if isinstance(self.lsb, int):
+        if isinstance(self.lsb, integer_types):
             return self.lsb
         return self.lsb.sid
 
@@ -1293,12 +1338,12 @@ class CAERO3(BaseCard):
         #self.list_c2 = model.AEFact(self.list_c2, msg=msg) # not added
 
     def Cp(self):
-        if isinstance(self.cp, int):
+        if isinstance(self.cp, integer_types):
             return self.cp
         return self.cp.cid
 
     def Pid(self):
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             return self.pid
         return self.pid.pid
 
@@ -1390,12 +1435,12 @@ class CAERO4(BaseCard):
         self.cp = model.Coord(self.cp, msg=msg)
 
     def Cp(self):
-        if isinstance(self.cp, int):
+        if isinstance(self.cp, integer_types):
             return self.cp
         return self.cp.cid
 
     def Pid(self):
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             return self.pid
         return self.pid.pid
 
@@ -1574,12 +1619,12 @@ class CAERO5(BaseCard):
             c2 = (mach ** 4 * (gamma + 1) - 4 * secL2 * ma2_secL2) / (4 * ma2_secL2 ** 2)
 
     def Cp(self):
-        if isinstance(self.cp, int):
+        if isinstance(self.cp, integer_types):
             return self.cp
         return self.cp.cid
 
     def Pid(self):
-        if isinstance(self.pid, int):
+        if isinstance(self.pid, integer_types):
             return self.pid
         return self.pid.pid
 
@@ -1650,7 +1695,7 @@ def points_elements_from_quad_points(p1, p2, p3, p4, x, y):
     return points, elements
 
 
-class PAERO5(BaseCard):
+class PAERO5(BaseCard):  ## TODO: not integrated
     def __init__(self, card=None, data=None):
         """
         +--------+-------+--------+--------+---------+-------+-------+-------+
@@ -1718,7 +1763,6 @@ class PAERO5(BaseCard):
 
         #return(I1, I2, I3, I4, I5,
                #J1, J2, J3, J4, J5)
-
 
 
 class FLFACT(BaseCard):
@@ -1912,17 +1956,17 @@ class FLUTTER(BaseCard):
         self.rfreq_val = model.FLFACT(self.density, msg=msg)
 
     def get_density(self):
-        if isinstance(self.density, int):
+        if isinstance(self.density, integer_types):
             return self.density
         return self.density.sid
 
     def get_mach(self):
-        if isinstance(self.mach, int):
+        if isinstance(self.mach, integer_types):
             return self.mach
         return self.mach.sid
 
     def get_rfreq_vel(self):
-        if isinstance(self.rfreq_vel, int):
+        if isinstance(self.rfreq_vel, integer_types):
             return self.rfreq_vel
         return self.rfreq_vel.sid
 
@@ -2217,6 +2261,9 @@ class PAERO1(BaseCard):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
+    def cross_reference(self, model):
+        pass
+
     def Bodies(self):
         return self.Bi
 
@@ -2332,6 +2379,9 @@ class PAERO2(BaseCard):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
+    def cross_reference(self, model):
+        pass
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -2428,6 +2478,9 @@ class PAERO3(BaseCard):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
+    def cross_reference(self, model):
+        pass
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -2511,12 +2564,12 @@ class SPLINE1(Spline):
         assert self.usage in ['FORCE', 'DISP', 'BOTH'], 'usage = %s' % self.usage
 
     def CAero(self):
-        if isinstance(self.caero, int):
+        if isinstance(self.caero, integer_types):
             return self.caero
         return self.caero.eid
 
     def Set(self):
-        if isinstance(self.setg, int):
+        if isinstance(self.setg, integer_types):
             return self.setg
         return self.setg.sid
 
@@ -2626,17 +2679,17 @@ class SPLINE2(Spline):
         self.setg = model.Set(self.setg, msg=msg)
 
     def Cid(self):
-        if isinstance(self.cid, int):
+        if isinstance(self.cid, integer_types):
             return self.cid
         return self.cid.cid
 
     def CAero(self):
-        if isinstance(self.caero, int):
+        if isinstance(self.caero, integer_types):
             return self.caero
         return self.caero.eid
 
     def Set(self):
-        if isinstance(self.setg, int):
+        if isinstance(self.setg, integer_types):
             return self.setg
         return self.setg.sid
 
@@ -2722,17 +2775,17 @@ class SPLINE4(Spline):
         assert self.usage in ['FORCE', 'DISP', 'BOTH'], 'uasge = %s' % self.usage
 
     def CAero(self):
-        if isinstance(self.caero, int):
+        if isinstance(self.caero, integer_types):
             return self.caero
         return self.caero.eid
 
     def AEList(self):
-        if isinstance(self.aelist, int):
+        if isinstance(self.aelist, integer_types):
             return self.aelist
         return self.aelist.sid
 
     def Set(self):
-        if isinstance(self.setg, int):
+        if isinstance(self.setg, integer_types):
             return self.setg
         return self.setg.sid
 
@@ -2825,22 +2878,22 @@ class SPLINE5(Spline):
             raise NotImplementedError(msg)
 
     def Cid(self):
-        if isinstance(self.cid, int):
+        if isinstance(self.cid, integer_types):
             return self.cid
         return self.cid.cid
 
     def CAero(self):
-        if isinstance(self.caero, int):
+        if isinstance(self.caero, integer_types):
             return self.caero
         return self.caero.eid
 
     def AEList(self):
-        if isinstance(self.aelist, int):
+        if isinstance(self.aelist, integer_types):
             return self.aelist
         return self.aelist.aelist
 
     def Set(self):
-        if isinstance(self.setg, int):
+        if isinstance(self.setg, integer_types):
             return self.setg
         return self.setg.sid
 

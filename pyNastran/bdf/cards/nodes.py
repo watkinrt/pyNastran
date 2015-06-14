@@ -2,6 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from numpy import array
+from six import integer_types
 
 from pyNastran.bdf.deprecated import GridDeprecated, PointDeprecated, SPOINTsDeprecated
 
@@ -437,7 +438,7 @@ class GRDSET(Node):
         :returns cd: the output coordinate system
         :type cd:    int
         """
-        if isinstance(self.cd, int):
+        if isinstance(self.cd, integer_types):
             return self.cd
         else:
             return self.cd.cid
@@ -450,7 +451,7 @@ class GRDSET(Node):
         :returns cp: the analysis coordinate system
         :type cp:    int
         """
-        if isinstance(self.cp, int):
+        if isinstance(self.cp, integer_types):
             return self.cp
         else:
             return self.cp.cid
@@ -472,7 +473,7 @@ class GRDSET(Node):
         :returns seid: the Superelement ID
         :type seid:    int
         """
-        if isinstance(self.seid, int):
+        if isinstance(self.seid, integer_types):
             return self.seid
         else:
             return self.seid.seid
@@ -543,6 +544,7 @@ class GRDSET(Node):
 
 
 class GRIDB(Node):
+    """defines the GRIDB class"""
     type = 'GRIDB'
 
     #: allows the get_field method and update_field methods to be used
@@ -615,7 +617,7 @@ class GRIDB(Node):
         :returns cd: the output coordinate system
         :type cd:    int
         """
-        if isinstance(self.cd, int):
+        if isinstance(self.cd, integer_types):
             return self.cd
         else:
             return self.cd.cid
@@ -812,7 +814,7 @@ class GRID(Node, GridDeprecated):
         :returns cd: the output coordinate system
         :type cd:    int
         """
-        if isinstance(self.cd, int):
+        if isinstance(self.cd, integer_types):
             return self.cd
         else:
             return self.cd.cid
@@ -825,7 +827,7 @@ class GRID(Node, GridDeprecated):
         :returns cp: the analysis coordinate system
         :type cp:    int
         """
-        if isinstance(self.cp, int):
+        if isinstance(self.cp, integer_types):
             return self.cp
         else:
             return self.cp.cid
@@ -838,7 +840,7 @@ class GRID(Node, GridDeprecated):
         :returns seid: the Superelement ID
         :type seid:    int
         """
-        if isinstance(self.seid, int):
+        if isinstance(self.seid, integer_types):
             return self.seid
         else:
             return self.seid.seid
@@ -1213,7 +1215,7 @@ class POINT(Node, PointDeprecated):
         :returns cp: the analysis coordinate system
         :type cp:    int
         """
-        if isinstance(self.cp, int):
+        if isinstance(self.cp, integer_types):
             return self.cp
         else:
             return self.cp.cid

@@ -17,7 +17,7 @@ reading/writing/accessing of BDF data.  Such methods include:
 # pylint: disable=R0904,R0902
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
+from six import iteritems, integer_types
 from six.moves import zip, range
 import multiprocessing as mp
 
@@ -171,10 +171,10 @@ class BDFMethods(BDFMethodsDeprecated):
                     sym_axis += 'y'
                 if aero.is_symmetric_xz():
                     sym_axis += 'z'
-                if aero.is_symmetric_xy():
-                    raise NotImplementedError('%s is antisymmetric about the XY plane' % str(aero))
-                if aero.is_symmetric_xz():
-                    raise NotImplementedError('%s is antisymmetric about the XZ plane' % str(aero))
+                if aero.is_anti_symmetric_xy():
+                    raise NotImplementedError('%s is anti-symmetric about the XY plane' % str(aero))
+                if aero.is_anti_symmetric_xz():
+                    raise NotImplementedError('%s is anti-symmetric about the XZ plane' % str(aero))
         if sym_axis is not None:
             # either we figured sym_axis out from the AERO cards or the user told us
             self.log.debug('Mass/MOI sym_axis = %r' % sym_axis)
@@ -241,11 +241,12 @@ class BDFMethods(BDFMethodsDeprecated):
 
         self.log.debug("Creating %i-process pool!" % num_cpus)
         pool = mp.Pool(num_cpus)
-        result = pool.imap(_mass_properties_mass_mp_func, [(element) for element in elements
-                           if element.type not in ['CBUSH', 'CBUSH1D',
-                                                   'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                                                   'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-                                                   ]])
+        result = pool.imap(_mass_properties_mass_mp_func,
+                           [(element) for element in elements
+                            if element.type not in ['CBUSH', 'CBUSH1D',
+                                                    'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                                                    'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+                                                    ]])
         result2 = pool.imap(_mass_properties_mass_mp_func, [(element) for element in masses])
 
         mass = zeros((nelements), 'float64')
@@ -404,9 +405,9 @@ class BDFMethods(BDFMethodsDeprecated):
 
         .. todo:: not done...
         """
-        if not isinstance(loadcase_id, int):
+        if not isinstance(loadcase_id, integer_types):
             raise RuntimeError('loadcase_id must be an integer; loadcase_id=%r' % loadcase_id)
-        if isinstance(p0, int):
+        if isinstance(p0, integer_types):
             p = self.nodes[p0].Position()
         else:
             p = array(p0)
@@ -766,9 +767,9 @@ class BDFMethods(BDFMethodsDeprecated):
 
         Pressure acts in the normal direction per model/real/loads.bdf and loads.f06
         """
-        if not isinstance(loadcase_id, int):
+        if not isinstance(loadcase_id, integer_types):
             raise RuntimeError('loadcase_id must be an integer; loadcase_id=%r' % loadcase_id)
-        if isinstance(p0, int):
+        if isinstance(p0, integer_types):
             p = self.model.nodes[p0].Position()
         else:
             p = array(p0)

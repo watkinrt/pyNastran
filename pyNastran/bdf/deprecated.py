@@ -1,3 +1,4 @@
+# pylint: disable=E1101,C0103
 import warnings
 from numpy import array
 

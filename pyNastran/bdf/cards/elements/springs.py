@@ -91,12 +91,8 @@ class CELAS1(SpringElement):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=True,
-                             msg=str(['CELAS1', self.eid]))
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
+        msg = ', which is required by %s eid=%s' % (self.type, self.eid)
+        return self._nodeIDs(allowEmptyNodes=True, msg=msg)
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -131,9 +127,9 @@ class CELAS1(SpringElement):
         return self.pid.k
 
     def cross_reference(self, model):
-        msg = ' which is required by CELAS1 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
+        msg = ', which is required by %s eid=%s' % (self.type, self.eid)
+        self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.Pid(), msg=msg)
 
     def raw_fields(self):
         nodes = self.node_ids
@@ -199,13 +195,13 @@ class CELAS2(SpringElement):
         assert len(set(self.nodes)) == 2, 'There are duplicate nodes=%s on CELAS2 eid=%s' % (self.nodes, self.eid)
 
     def cross_reference(self, model):
-        msg = ' which is required by CELAS2 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        msg = ', which is required by %s eid=%s' % (self.type, self.eid)
+        self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
 
     def _verify(self, xref=False):
         eid = self.Eid()
         k = self.K()
-        nodeIDs = self.node_ids
+        node_ids = self.node_ids
         c1 = self.c2
         c2 = self.c1
         ge = self.ge
@@ -218,15 +214,15 @@ class CELAS2(SpringElement):
         assert isinstance(ge, float), 'ge=%r' % ge
         assert isinstance(s, float), 'ge=%r' % s
         if xref:
-            assert len(nodeIDs) == len(self.nodes)
-            #for nodeID, node in zip(nodeIDs, self.nodes):
+            assert len(node_ids) == len(self.nodes)
+            #for node_id, node in zip(node_id, self.nodes):
                 #assert node.node.nid
 
     def _is_same_card(self, elem, debug=False):
         if self.type != elem.type:
             return False
-        fields1 = [self.eid] + self.nodes + [self.k, self.c1, self.c2]
-        fields2 = [elem.eid] + elem.nodes + [elem.k, elem.c1, elem.c2]
+        fields1 = [self.eid] + self.node_ids + [self.k, self.c1, self.c2]
+        fields2 = [elem.eid] + elem.node_ids + [elem.k, elem.c1, elem.c2]
         if debug:
             print("fields1=%s fields2=%s" % (fields1, fields2))
         return self._is_same_fields(fields1, fields2)
@@ -264,12 +260,8 @@ class CELAS2(SpringElement):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=True,
-                             msg=str(['CELAS2', self.eid]))
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
+        msg = ', which is required by %s eid=%s' % (self.type, self.eid)
+        return self._nodeIDs(allowEmptyNodes=True, msg=msg)
 
     def raw_fields(self):
         nodes = self.node_ids
@@ -330,21 +322,17 @@ class CELAS3(SpringElement):
         return self.pid.k
 
     def cross_reference(self, model):
-        msg = ' which is required by CELAS3 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
+        msg = ', which is required by %s eid=%s' % (self.type, self.eid)
+        self.nodes = model.Nodes(self.node_ids, msg=msg)
+        self.pid = model.Property(self.Pid(), msg=msg)
 
     def nodeIDs(self):
         return self.node_ids
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=True,
-                             msg=str(['CELAS3', self.eid]))
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
+        msg = ', which is required by %s eid=%s' % (self.type, self.eid)
+        return self._nodeIDs(allowEmptyNodes=True, msg=msg)
 
     def raw_fields(self):
         list_fields = ['CELAS3', self.eid, self.Pid(), self.s1, self.s2]
@@ -353,7 +341,7 @@ class CELAS3(SpringElement):
     #def repr_fields(self):
         #s1 = set_blank_if_default(self.s1,0)
         #s2 = set_blank_if_default(self.s2,0)
-        #list_fields = ['CELAS3',self.eid,self.Pid(),s1,s2]
+        #list_fields = ['CELAS3', self.eid, self.Pid(), s1, s2]
         #return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -407,26 +395,16 @@ class CELAS4(SpringElement):
 
     @property
     def node_ids(self):
-        return self._nodeIDs(allowEmptyNodes=True,
-                             msg=str(['CELAS4', self.eid]))
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
+        msg = ', which is required by %s eid=%s' % (self.type, self.eid)
+        return self._nodeIDs(allowEmptyNodes=True, msg=msg)
 
     def cross_reference(self, model):
-        msg = ' which is required by CELAS4 eid=%s' % self.eid
-        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        msg = ', which is required by %s eid=%s' % (self.type, self.eid)
+        self.nodes = model.Nodes(self.node_ids, allowEmptyNodes=True, msg=msg)
 
     def raw_fields(self):
         list_fields = ['CELAS4', self.eid, self.k, self.s1, self.s2]
         return list_fields
-
-    #def repr_fields(self):
-        #s1 = set_blank_if_default(self.s1, 0)
-        #s2 = set_blank_if_default(self.s2, 0)
-        #list_fields = ['CELAS4',self.eid,self.Pid(),s1,s2]
-        #return list_fields
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()

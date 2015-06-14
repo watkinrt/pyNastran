@@ -418,8 +418,8 @@ class Subcase(object):
 
     def _simplify_data(self, key, value, options, param_type):
         if param_type == 'SET-type':
-            #print("adding isubcase=%s key=%r value=|%s| options=|%s| "
-            #      "param_type=%s" %(self.id, key, value, options, param_type))
+            #print("adding isubcase=%s key=%r value=%r options=%r "
+                  #"param_type=%r" % (self.id, key, value, options, param_type))
             values2 = []
             for (i, ivalue) in enumerate(value):
                 ivalue = ivalue.strip()
@@ -446,17 +446,18 @@ class Subcase(object):
             if value.isdigit():  # PARAM,DBFIXED,-1
                 value = value
         else:
-            #a = 'key=%r' % key
-            #b = 'value=%r' % value
-            #c = 'options=|%s|' % options
-            #d = 'param_type=%r' % param_type
-            #print("_adding isubcase=%s %-18s %-12s %-12s %-12s" %(self.id, a, b, c, d))
-            if isinstance(value, int) or value is None:
+            if 0:
+                a = 'key=%r' % key
+                b = 'value=%r' % value
+                c = 'options=%r' % options
+                d = 'param_type=%r' % param_type
+                #print("_adding isubcase=%s %-18s %-12s %-12s %-12s" %(self.id, a, b, c, d))
+            if isinstance(value, integer_types) or value is None:
                 pass
             elif value.isdigit():  # STRESS = ALL
                 value = value
             #else: pass
-        return (key, value, options)
+        return key, value, options
 
     def get_op2_data(self, sol, solmap_toValue):
         self.sol = sol
@@ -481,7 +482,7 @@ class Subcase(object):
             (value, options, paramType) = param
 
             sol = solmap_toValue[value.upper()]
-            print("***value=%s sol=%s" % (value, sol))
+            #print("***value=%s sol=%s" % (value, sol))
         else:  # leaves SOL the same
             sol = self.sol
 
@@ -702,18 +703,18 @@ class Subcase(object):
                     pass  # dont write global subcase parameters
                 else:
                     #print("key=%s param=%s" %(key, param))
-                    (value, options, paramType) = param
-                    #print("  *key=|%s| value=|%s| options=%s "
-                          #"paramType=|%s|" % (key, value, options, paramType))
+                    (value, options, param_type) = param
+                    #print("  *key=%r value=|%s| options=%s "
+                          #"param_type=|%s|" % (key, value, options, param_type))
                     msg += self.print_param(key, param)
                     nparams += 1
                     #print ""
             if nparams == 0:
                 for (key, param) in self.subcase_sorted(self.params.items()):
                     #print("key=%s param=%s" %(key, param))
-                    (value, options, paramType) = param
-                    #print("  *key=|%s| value=|%s| options=%s "
-                          #"paramType=|%s|" % (key, value, options, paramType))
+                    (value, options, param_type) = param
+                    #print("  *key=%r value=|%s| options=%s "
+                          #"param_type=|%s|" % (key, value, options, param_type))
                     msg += self.print_param(key, param)
                     nparams += 1
                 assert nparams > 0, 'No subcase paramters are defined for isubcase=%s...' % self.id
@@ -785,13 +786,9 @@ class Subcase(object):
             msg += 'SUBCASE %s\n' % self.id
 
         nparams = 0
-        for (key, param) in self.subcase_sorted(self.params.items()):
-            #print("key=%s param=%s" %(key,param))
-            (value, options, paramType) = param
-            #print("  ?*key=|%s| value=|%s| options=%s paramType=|%s|"
-            #      %(key,value,options,paramType))
+        for key, param in self.subcase_sorted(iteritems(self.params)):
+            (value, options, param_type) = param
             msg += self.print_param(key, param)
-            #print ""
             nparams += 1
         if self.id > 0:
             assert nparams > 0, 'No subcase paramters are defined for isubcase=%s...' % self.id

@@ -1,7 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import  iteritems
+from six import  iteritems, integer_types
 from six.moves import range
 
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -65,12 +65,16 @@ class QBDY1(ThermalLoad):
         self.eids = model.Elements(self.eids, msg=msg)
 
     def Eid(self, eid):
-        if isinstance(eid, int):
+        if isinstance(eid, integer_types):
             return eid
         return eid.eid
 
     def nQFluxTerms(self):
         return len(self.qFlux)
+
+    @property
+    def element_ids(self):
+        return self.Eids()
 
     def Eids(self):
         eids = []
@@ -79,11 +83,11 @@ class QBDY1(ThermalLoad):
         return eids
 
     def raw_fields(self):
-        list_fields = ['QBDY1', self.sid, self.qFlux] + self.Eids()
+        list_fields = ['QBDY1', self.sid, self.qFlux] + self.element_ids
         return list_fields
 
     def repr_fields(self):
-        eids = collapse_thru_by(self.Eids())
+        eids = collapse_thru_by(self.element_ids)
         list_fields = ['QBDY1', self.sid, self.qFlux] + eids
         return list_fields
 
@@ -137,7 +141,7 @@ class QBDY2(ThermalLoad):  # not tested
         self.eid = model.Element(self.eid, msg=msg)
 
     def Eid(self):
-        if isinstance(self.eid, int):
+        if isinstance(self.eid, integer_types):
             return self.eid
         return self.eid.eid
 
@@ -200,7 +204,7 @@ class QBDY3(ThermalLoad):
         return eids
 
     def Eid(self, eid):
-        if isinstance(eid, int):
+        if isinstance(eid, integer_types):
             return eid
         return eid.eid
 

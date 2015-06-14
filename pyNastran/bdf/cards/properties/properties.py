@@ -11,6 +11,7 @@ All ungrouped properties are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import integer_types
 from six.moves import range
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
@@ -71,10 +72,11 @@ class PFAST(Property):
 
     def cross_reference(self, model):
         msg = ' which is required by PFAST pid=%s' % self.pid
-        self.mcid = model.Coord(self.mcid, msg)
+        if self.mcid != -1:
+            self.mcid = model.Coord(self.Mcid(), msg)
 
     def Mcid(self):
-        if isinstance(self.mcid, int):
+        if isinstance(self.mcid, integer_types):
             return self.mcid
         return self.mcid.cid
 
@@ -88,7 +90,7 @@ class PFAST(Property):
         return fields
 
     def repr_fields(self):
-        mcid = set_blank_if_default(self.mcid, -1)
+        mcid = set_blank_if_default(self.Mcid(), -1)
         mflag = set_blank_if_default(self.mflag, 0)
         kr1 = set_blank_if_default(self.kr1, 0.0)
         kr2 = set_blank_if_default(self.kr2, 0.0)
@@ -309,7 +311,7 @@ class PSOLID(SolidProperty):
         assert isinstance(mid, int), 'mid=%r' % mid
 
         if xref:
-            if self.mid.type not in ['MAT1', 'MAT4', 'MAT9', 'MAT10', 'MAT11']:
+            if self.mid.type not in ['MAT1', 'MAT4', 'MAT5', 'MAT9', 'MAT10', 'MAT11']:
                 msg = 'mid=%i self.mid.type=%s' % (mid, self.mid.type)
                 raise TypeError(msg)
 

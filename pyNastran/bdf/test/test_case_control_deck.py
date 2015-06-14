@@ -40,18 +40,19 @@ class CaseControlTest(unittest.TestCase):
         deck.add_parameter_to_local_subcase(1, 'SET 1 = 100')
         deck.add_parameter_to_local_subcase(1, 'SET 2 = 200')
 
-        lines = ['DISPLACEMENT(PLOT,PUNCH) = 8',
-                 'GPFORCE = 7',
-                 'MPC = 3',
-                 'SPC = 2',
-                 'STRESS = ALL',
-                 'SUBCASE 1',
-                 '    SET 1 = 100',
-                 '    SET 2 = 200',
-                 '    ANALYSIS = SAERO',
-                 '    STRAIN = 7',
-                 'SUBCASE 2',
-                 '    ANALYSIS = STATIC',]
+        lines = [
+            'DISPLACEMENT(PLOT,PUNCH) = 8',
+            'GPFORCE = 7',
+            'MPC = 3',
+            'SPC = 2',
+            'STRESS = ALL',
+            'SUBCASE 1',
+            '    SET 1 = 100',
+            '    SET 2 = 200',
+            '    ANALYSIS = SAERO',
+            '    STRAIN = 7',
+            'SUBCASE 2',
+            '    ANALYSIS = STATIC',]
         deck_string = '%s' % deck
         deck_lines = deck_string.strip().splitlines()
 

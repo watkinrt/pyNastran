@@ -239,7 +239,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.menu_scripts = None
 
         menu_window = ['toolbar', 'reswidget']
-        menu_view = ['scshot', '', 'wireframe', 'surface', 'creset', '', 'back_col', 'legend','axis', ]
+        menu_view = ['scshot', '', 'wireframe', 'surface', 'creset', '', 'back_col', 'legend', 'axis', ]
         if self.html_logging:
             actions['logwidget'] = self.log_dock.toggleViewAction()
             actions['logwidget'].setStatusTip("Show/Hide application log")
@@ -906,8 +906,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #if geometry_format in self.formats:
             msg = 'The import for the %r module failed.\n' % geometry_format
             #else:
-                #msg = '%r is not a enabled format; enabled_formats=%s\n' % (geometry_format, self.supported_formats)
-                #msg += str("formats = %s" % str(self.formats))
+            #msg += '%r is not a enabled format; enabled_formats=%s\n' % (geometry_format, self.supported_formats)
             self.log_error(msg)
             return is_failed
 

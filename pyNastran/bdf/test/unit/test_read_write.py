@@ -111,25 +111,19 @@ class TestReadWrite(unittest.TestCase):
     def test_include_end(self):
         """this test fails incorrectly"""
         if PY2:
-            f = open('a.bdf', 'wb')
+            f = open('b.bdf', 'wb')
         else:
-            f = open('a.bdf', 'w')
+            f = open('b.bdf', 'w')
+        f = open('a.bdf', wb)
         f.write('CEND\n')
         f.write('BEGIN BULK\n')
         f.write('GRID,1\n')
         f.write("INCLUDE 'b.bdf'\n\n")
 
-        if PY2:
-            f = open('b.bdf', 'wb')
-        else:
-            f = open('b.bdf', 'w')
         f.write('GRID,2\n')
         f.write("INCLUDE 'c.bdf'\n\n")
 
-        if PY2:
-            f = open('c.bdf', 'wb')
-        else:
-            f = open('c.bdf', 'w')
+        f = open('c.bdf', wb)
         f.write('GRID,3\n\n')
         f.write("ENDDATA\n")
         f.close()
@@ -149,6 +143,7 @@ class TestReadWrite(unittest.TestCase):
         model.active_filenames = ['fake.file']
         with self.assertRaises(IOError):
             model._open_file('fake.file')
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

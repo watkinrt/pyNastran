@@ -1,7 +1,7 @@
 # pylint: disable=E1101,C0103,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, iteritems
+from six import string_types, iteritems, integer_types
 #import sys
 from numpy import ndarray
 
@@ -37,7 +37,7 @@ class GetMethods(GetMethodsDeprecated):
         for eid in eids:
             element = self.Element(eid, msg=msg)
             self.log.debug("element.pid = %s" % (element.pid))
-            nids = set(element.nodeIDs())
+            nids = set(element.node_ids)
             nids2.update(nids)
         return nids2
 
@@ -321,7 +321,7 @@ class GetMethods(GetMethodsDeprecated):
     # LOADS
 
     def Load(self, sid, msg=''):
-        assert isinstance(sid, int), 'sid=%s is not an integer\n' % sid
+        assert isinstance(sid, integer_types), 'sid=%s is not an integer\n' % sid
         if sid in self.loads:
             load = self.loads[sid]
         else:
@@ -329,7 +329,7 @@ class GetMethods(GetMethodsDeprecated):
         return load
 
     def DLoad(self, sid, msg=''):
-        assert isinstance(sid, int), 'sid=%s is not an integer\n' % sid
+        assert isinstance(sid, integer_types), 'sid=%s is not an integer\n' % sid
         if sid in self.dloads:
             load = self.dloads[sid]
         else:
@@ -337,7 +337,7 @@ class GetMethods(GetMethodsDeprecated):
         return load
 
     def get_dload_entries(self, sid, msg=''):
-        assert isinstance(sid, int), 'sid=%s is not an integer\n' % sid
+        assert isinstance(sid, integer_types), 'sid=%s is not an integer\n' % sid
         if sid in self.dload_entries:
             load = self.dload_entries[sid]
         else:
@@ -345,14 +345,20 @@ class GetMethods(GetMethodsDeprecated):
         return load
 
     #--------------------
-    # SPCs
+    def MPC(self, conid, msg=''):
+        assert isinstance(conid, integer_types), 'conid=%s is not an integer\n' % conid
+        if conid in self.mpcs:
+            constraint = self.mpcs[conid]
+        else:
+            raise KeyError('cannot find MPC ID=%r.\n%s' % (conid, msg))
+        return constraint
 
     def SPC(self, conid, msg=''):
-        assert isinstance(conid, int), 'conid=%s is not an integer\n' % conid
+        assert isinstance(conid, integer_types), 'conid=%s is not an integer\n' % conid
         if conid in self.spcs:
             constraint = self.spcs[conid]
         else:
-            raise KeyError('cannot find ConstraintID=%r.\n%s' % (conid, msg))
+            raise KeyError('cannot find SPC ID=%r.\n%s' % (conid, msg))
         return constraint
 
     #--------------------
@@ -620,7 +626,7 @@ class GetMethods(GetMethodsDeprecated):
             pass
         elif isinstance(xkeys, ndarray):
             assert len(xkeys.shape) == 1, xkeys.shape
-            assert isinstance(xkeys[0], int), type(xkeys[0])
+            assert isinstance(xkeys[0], integer_types), type(xkeys[0])
         elif xkeys is None:
             xkeys = xdict.iterkeys()
         else:

@@ -18,7 +18,7 @@ The ConstraintObject contain multiple constraints.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
+from six import iteritems, integer_types
 from six.moves import zip, range
 from itertools import count
 
@@ -122,7 +122,7 @@ class ConstraintObject(object):
          #return constraints2
 
     def ConstraintID(self):
-        if isinstance(self.conid, int):
+        if isinstance(self.conid, integer_types):
             return self.conid
         return self.conid.conid
 
@@ -199,6 +199,11 @@ class SUPORT1(Constraint):
         assert len(self.IDs) > 0
         assert len(self.IDs) == len(self.Cs)
 
+
+    @property
+    def node_ids(self):
+        return self.IDs
+
     def raw_fields(self):
         fields = ['SUPORT1', self.conid]
         for ID, c in zip(self.IDs, self.Cs):
@@ -212,10 +217,9 @@ class SUPORT1(Constraint):
 
 class SUPORT(Constraint):
     """
-    ::
-
-      SUPORT  ID1 C1 ID2 C2 ID3 C3 ID4 C4
-      SUPORT1 SID ID1 C1 ID2 C2 ID3 C3
+    +---------+-----+-----+-----+-----+-----+-----+-----+----+
+    | SUPORT  | ID1 | C1  | ID2 |  C2 | ID3 | C3  | ID4 | C4 |
+    +---------+-----+-----+-----+-----+-----+-----+-----+----+
     """
     type = 'SUPORT'
 
@@ -247,6 +251,10 @@ class SUPORT(Constraint):
                 self.Cs.append(fields[i + 1])
         assert len(self.IDs) > 0
         assert len(self.IDs) == len(self.Cs)
+
+    @property
+    def node_ids(self):
+        return self.IDs
 
     def raw_fields(self):
         fields = ['SUPORT']
@@ -286,14 +294,14 @@ class MPC(Constraint):
                 grid = integer(card, ifield, 'G%i' % i)
                 component = components_or_blank(card, ifield + 1, 'constraint%i' % i, 0)  # scalar point
                 if i == 1:
-                    value = double(card, ifield + 2, 'enforced%i' % i)
-                    if value == 0.0:
-                        raise RuntimeError('enforced1 must be nonzero; value=%r' % value)
+                    enforcedi = double(card, ifield + 2, 'enforced%i' % i)
+                    if enforcedi == 0.0:
+                        raise RuntimeError('enforced1 must be nonzero; enforcedi=%r' % enforcedi)
                 else:
-                    value = double_or_blank(card, ifield + 2, 'enforced%i' % i, 0.0)
+                    enforcedi = double_or_blank(card, ifield + 2, 'enforced%i' % i, 0.0)
                 self.gids.append(grid)
                 self.constraints.append(component)
-                self.enforced.append(value)
+                self.enforced.append(enforcedi)
                 i += 1
 
                 if ifield + 4 > nfields and i != 2:
@@ -301,29 +309,25 @@ class MPC(Constraint):
                     break
                 grid = integer(card, ifield + 3, 'G%i' % i)
                 component = components_or_blank(card, ifield + 4, 'constraint%i' % i, 0)  # scalar point
-                value = double_or_blank(card, ifield + 5, 'enforced%i' % i)
+                enforcedi = double_or_blank(card, ifield + 5, 'enforced%i' % i)
                 self.gids.append(grid)
                 self.constraints.append(component)
-                self.enforced.append(value)
+                self.enforced.append(enforcedi)
                 i += 1
-
-            # reduce the size if there are duplicate Nones
-            #nConstraints = max(len(self.gids       ),
-            #                   len(self.constraints),
-            #                   len(self.enforced   ))
-            #self.gids        = self.gids[       0:nConstraints]
-            #self.constraints = self.constraints[0:nConstraints]
-            #self.enforced    = self.enforced[   0:nConstraints]
         else:
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return self.gids
 
     def raw_fields(self):  # MPC
         fields = ['MPC', self.conid]
-        for i, gid, constraint, enforced in zip(count(), self.gids, self.constraints, self.enforced):
+        for i, gid, constraint, enforced in zip(count(), self.node_ids, self.constraints, self.enforced):
             fields += [gid, constraint, enforced]
             if i % 2 == 1 and i > 0:
                 fields.append(None)
@@ -331,26 +335,42 @@ class MPC(Constraint):
         return fields
 
     def write_card(self, size=8, is_double=False):
-        grids, constraints, enforceds = self.gids, self.constraints, self.enforced
         if size == 8:
-            msg = 'MPC     %8s' % self.conid
+            return self.write_card_8()
+        else:
+            return self.write_card_16(is_double)
+
+    def write_card_8(self):
+        msg = 'MPC     %8s' % self.conid
+        grids, constraints, enforceds = self.node_ids, self.constraints, self.enforced
+        for i, grid, component, enforced in zip(count(), grids, constraints, enforceds):
+            msg += '%8i%8s%8s' % (grid, component, print_float_8(enforced))
+            if i % 2 == 1 and i > 0:
+                msg += '\n%8s%8s' % ('', '')
+        return self.comment() + msg.rstrip() + '\n'
+
+    def write_card_16(self, is_double=False):
+        # TODO: we're sure MPCs support double precision?
+        msg = 'MPC*    %16s' % self.conid
+        grids, constraints, enforceds = self.node_ids, self.constraints, self.enforced
+        if is_double:
             for i, grid, component, enforced in zip(count(), grids, constraints, enforceds):
-                msg += '%8i%8s%8s' % (grid, component, print_float_8(enforced))
-                if i % 2 == 1 and i > 0:
-                    msg += '\n%8s%8s' % ('', '')
-        elif size == 16:
-            # TODO: we're sure MPCs support double precision?
-            msg = 'MPC*    %16s' % self.conid
-            if is_double:
-                for i, grid, component, enforced in zip(count(), grids, constraints, enforceds):
-                    msg += '%16i%16s%16s' % (grid, component, print_scientific_double(enforced))
-                    if i % 2 == 1 and i > 0:
-                        msg += '\n%8s%16s' % ('*', '')
-            else:
-                for i, grid, component, enforced in zip(count(), grids, constraints, enforceds):
-                    msg += '%16i%16s%16s' % (grid, component, print_float_16(enforced))
-                    if i % 2 == 1 and i > 0:
-                        msg += '\n%8s%16s' % ('*', '')
+                if i == 0:
+                    msg += '%16i%16s%16s\n' % (grid, component, print_scientific_double(enforced))
+                elif i % 2 == 1:
+                    msg += '%-8s%16i%16s%16s\n' % ('*', grid, component, print_scientific_double(enforced))
+                else:
+                    msg += '%-8s%16s%16i%16s%16s\n' % ('*', '', grid, component, print_scientific_double(enforced))
+        else:
+            for i, grid, component, enforced in zip(count(), grids, constraints, enforceds):
+                if i == 0:
+                    msg += '%16i%16s%16s\n' % (grid, component, print_float_16(enforced))
+                elif i % 2 == 1:
+                    msg += '%-8s%16i%16s%16s\n' % ('*', grid, component, print_float_16(enforced))
+                else:
+                    msg += '%-8s%16s%16i%16s%16s\n' % ('*', '', grid, component, print_float_16(enforced))
+        if i % 2 == 0:
+            msg += '*'
         return self.comment() + msg.rstrip() + '\n'
 
 
@@ -374,31 +394,34 @@ class SPC(Constraint):
             self._comment = comment
         if card:
             self.conid = integer(card, 1, 'sid')
-            self.gids = [integer(card, 2, 'G1'), integer_or_blank(card, 5, 'G2')]
-            # :0 if scalar point 1-6 if grid
-            self.constraints = [components_or_blank(card, 3, 'C1', 0),
-                                components_or_blank(card, 6, 'C2', 0)]
-            self.enforced = [double_or_blank(card, 4, 'D1', 0.0),
-                             double_or_blank(card, 7, 'D2', 0.0)]
-
-            # reduce the size if there are duplicate Nones
-            nConstraints = max(len(self.gids),
-                               len(self.constraints),
-                               len(self.enforced))
-            self.gids = self.gids[0:nConstraints]
-            self.constraints = self.constraints[0:nConstraints]
-            self.enforced = self.enforced[0:nConstraints]
+            if card.field(5) is None:
+                self.gids = [integer(card, 2, 'G1'),]
+                self.constraints = [components_or_blank(card, 3, 'C1', 0)]
+                self.enforced = [double_or_blank(card, 4, 'D1', 0.0)]
+            else:
+                self.gids = [
+                    integer(card, 2, 'G1'),
+                    integer(card, 5, 'G2'),
+                ]
+                # :0 if scalar point 1-6 if grid
+                self.constraints = [components_or_blank(card, 3, 'C1', 0),
+                                    components_or_blank(card, 6, 'C2', 0)]
+                self.enforced = [double_or_blank(card, 4, 'D1', 0.0),
+                                 double_or_blank(card, 7, 'D2', 0.0)]
         else:
             self.conid = data[0]
             self.gids = [data[1]]
             self.constraints = [data[2]]
             self.enforced = [data[3]]
 
-    def getNodeDOFs(self, model):
-        pass
-        #return conid, dofs
+    #def getNodeDOFs(self, model):
+        #pass
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return self.gids
 
     def cross_reference(self, i, node):
@@ -415,7 +438,7 @@ class SPC(Constraint):
 
     def raw_fields(self):
         fields = ['SPC', self.conid]
-        for (gid, constraint, enforced) in zip(self.gids, self.constraints,
+        for (gid, constraint, enforced) in zip(self.node_ids, self.constraints,
                                                self.enforced):
             fields += [gid, constraint, enforced]
         return fields
@@ -543,28 +566,20 @@ class SPC1(Constraint):
             self.constraints = data[1]
             self.nodes = data[2:]
 
+    @property
+    def node_ids(self):
+        return [int(i) for i in self.nodes]
+
     def cross_reference(self, i, node):
         self.nodes[i] = node
 
-    def raw_fields(self):  # SPC1
-        #test = [i for i in range(self.nodes[0], self.nodes[-1]+1)]
-        #print("self.nodes = ",self.nodes)
-        #print("test       = ",test)
-        #if self.nodes == test:
-        #    nodes = [self.nodes[0], 'THRU', self.nodes[-1]]
-        #else:
-        #print("SPC1 self.nodes = ",self.nodes)
-        nodes = [int(i) for i in self.nodes]  # SPC1
-        fields = ['SPC1', self.conid, self.constraints] + nodes
+    def raw_fields(self):
+        fields = ['SPC1', self.conid, self.constraints] + self.node_ids
         return fields
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
-
-#class ADDConstraint(Constraint):
-#    def __init__(self,card,data):
-#        self.__init__(Constraint)
 
 
 class ConstraintADD(Constraint):
@@ -652,7 +667,12 @@ class MPCADD(ConstraintADD):
     Defines a multipoint constraint equation of the form
     :math:`\Sigma_j A_j u_j =0` where :math:`u_j` represents
     degree-of-freedom :math:`C_j` at grid or scalar point :math:`G_j`.
-    mPCADD   2       1       3
+
+    +--------+----+----+-----+
+    |    1   | 2  |  3 |  4  |
+    +--------+----+----+-----+
+    | MPCADD | 2  |  1 |  3  |
+    +--------+----+----+-----+
     """
     type = 'MPCADD'
 

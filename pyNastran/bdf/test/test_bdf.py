@@ -1,7 +1,7 @@
 # pylint: disable=W0612,C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
+from six import iteritems, integer_types
 import os
 import sys
 import numpy
@@ -104,16 +104,19 @@ def memory_usage_psutil():
     mem = process.get_memory_info()[0] / float(2 ** 20)
     return mem
 
-def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False,
+
+def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
             cid=None, meshForm='combined', isFolder=False, print_stats=False,
             sum_load=False, size=8, is_double=False,
             reject=False, nastran='', dynamic_vars=None):
     if dynamic_vars is None:
         dynamic_vars = {}
-    bdfModel = str(bdfFilename)
+
+    # TODO: why do we need this?
+    bdfModel = str(bdf_filename)
     print("bdfModel = %s" % bdfModel)
     if isFolder:
-        bdfModel = os.path.join(test_path, folder, bdfFilename)
+        bdfModel = os.path.join(test_path, folder, bdf_filename)
 
     assert os.path.exists(bdfModel), '%r doesnt exist' % bdfModel
 
@@ -175,8 +178,8 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
         sys.exit('KeyboardInterrupt...sys.exit()')
     #except IOError:
         #pass
-    except CardParseSyntaxError:  # only temporarily uncomment this when running lots of tests
-        pass
+    #except CardParseSyntaxError:  # only temporarily uncomment this when running lots of tests
+        #pass
     #except AttributeError:  # only temporarily uncomment this when running lots of tests
         #pass
     #except SyntaxError:  # only temporarily uncomment this when running lots of tests
@@ -256,10 +259,14 @@ def run_fem2(bdfModel, outModel, xref, punch,
     fem2.write_bdf(outModel2, interspersed=False, size=size, is_double=is_double)
     #fem2.writeAsCTRIA3(outModel2)
     os.remove(outModel2)
-    return (fem2)
+    return fem2
 
 
 def divide(value1, value2):
+    """
+    Used to divide the number of cards to check that nothing was lost.
+    Handles division by 0 by returning 0, which is the reciprocal.
+    """
     if value1 == value2:  # good for 0/0
         return 1.0
     else:
@@ -430,8 +437,8 @@ def compare(fem1, fem2, xref=True, check=True, print_stats=True):
         get_element_stats(fem1, fem2)
         get_matrix_stats(fem1, fem2)
     compare_card_content(fem1, fem2)
-    #compare_params(fem1,fem2)
-    #print_points(fem1,fem2)
+    #compare_params(fem1, fem2)
+    #print_points(fem1, fem2)
     return diffCards
 
 
@@ -440,8 +447,8 @@ def compare_params(fem1, fem2):
 
 
 def print_points(fem1, fem2):
-    for (nid, n1) in sorted(iteritems(fem1.nodes)):
-        print("%s   xyz=%s  n1=%s  n2=%s" % (nid, n1.xyz, n1.Position(True),
+    for nid, node in sorted(iteritems(fem1.nodes)):
+        print("%s   xyz=%s  n1=%s  n2=%s" % (nid, node.xyz, node.Position(True),
                                             fem2.Node(nid).Position()))
         break
     coord = fem1.Coord(5)
@@ -451,7 +458,7 @@ def print_points(fem1, fem2):
 
 def main():
     from docopt import docopt
-    msg  = "Usage:\n"
+    msg = "Usage:\n"
     msg += "  test_bdf [-q] [-x] [-p] [-c] [-L] BDF_FILENAME\n" #
     msg += "  test_bdf [-q] [-x] [-p] [-c] [-L] [-d] BDF_FILENAME\n" #
     msg += "  test_bdf [-q] [-x] [-p] [-c] [-L] [-l] BDF_FILENAME\n" #
@@ -509,7 +516,7 @@ def main():
     run_bdf('.',
             data['BDF_FILENAME'],
             debug=not(data['--quiet']),
-            xref =not(data['--xref']),
+            xref=not(data['--xref']),
             check=not(data['--check']),
             punch=data['--punch'],
             reject=data['--reject'],

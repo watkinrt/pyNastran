@@ -7,6 +7,7 @@ Defines various utilities for BDF parsing including:
  - PositionWRT
  - TransformLoadWRT
 """
+from __future__ import print_function
 from six import iteritems
 import os
 from numpy import unique, cross, dot, array

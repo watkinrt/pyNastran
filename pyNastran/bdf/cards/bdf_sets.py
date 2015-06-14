@@ -105,7 +105,6 @@ class ASET(ABCQSet):
     def __init__(self, card=None, data=None, comment=''):
         ABCQSet.__init__(self, card, data, comment)
 
-
 class BSET(ABCQSet):
     """
     Defines analysis set (a-set) degrees-of-freedom to be fixed (b-set) during
@@ -163,7 +162,7 @@ class ABQSet1(Set):
 
     Defines degrees-of-freedom in the analysis set (a-set).
 
-    +--=----+-----+-----+------+------+-----+-----+-----+-----+
+    +-------+-----+-----+------+------+-----+-----+-----+-----+
     | ASET1 |  C  | ID1 | ID2  | ID3  | ID4 | ID5 | ID6 | ID7 |
     +-------+-----+-----+------+------+-----+-----+-----+-----+
     |       | ID8 | ID9 |      |      |     |     |     |     |
@@ -171,7 +170,6 @@ class ABQSet1(Set):
     | ASET1 |  C  | ID1 | THRU | ID2  |     |     |     |     |
     +-------+-----+-----+------+------+-----+-----+-----+-----+
     """
-
     def __init__(self, card=None, data=None, comment=''):
         Set.__init__(self, card, data)
         if comment:
