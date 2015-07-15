@@ -8,7 +8,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 
 def cart3d_to_nastran_filename(cart3d_filename, bdf_filename, log=None, debug=False):
     """
-    Converts a Cart3D file to STL format.
+    Converts a Cart3D file to Nastran format.
 
     :param cart3d_filename: path to the input Cart3D file
     :param bdf_filename:    path to the output BDF file

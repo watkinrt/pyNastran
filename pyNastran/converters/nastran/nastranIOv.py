@@ -23,7 +23,7 @@ from six.moves import zip, range
 
 import os
 from numpy import zeros, abs, mean, where, nan_to_num, amax, amin, vstack
-from numpy import searchsorted, sqrt, pi, arange, unique, allclose
+from numpy import searchsorted, sqrt, pi, arange, unique, allclose, ndarray, int32
 from numpy.linalg import norm
 
 import vtk
@@ -112,6 +112,10 @@ class NastranIO(object):
                 return
             self.alt_geometry_actor.VisibilityOff()
 
+    def _create_coord(self, cid, coord, Type):
+        origin = coord.origin
+        beta = coord.beta()
+        self.create_coordinate_system(label=cid, origin=origin, matrix_3x3=beta, Type=Type)
 
     def _create_nastran_coords(self, model):
         cid_types = {
@@ -122,12 +126,16 @@ class NastranIO(object):
         for cid, coord in sorted(iteritems(model.coords)):
             if cid == 0:
                 continue
-            if cid in self.show_cids:
-                # .. todo:: has issues in VTK 6 I think due to lack of self.grid.Update()
-                origin = coord.origin
-                beta = coord.beta()
-                Type = cid_types[coord.Type]
-                self.create_coordinate_system(label=cid, origin=origin, matrix_3x3=beta, Type=Type)
+            Type = cid_types[coord.Type]
+            if self.show_cids is True:
+                self._create_coord(cid, coord, Type)
+            elif isinstance(self.show_cids, (int, int32)):
+                if cid == self.show_cids:
+                    self._create_coord(cid, coord, Type)
+            elif isinstance(self.show_cids, (list, tuple, ndarray)):
+                if cid in self.show_cids:
+                    # .. todo:: has issues in VTK 6 I think due to lack of self.grid.Update()
+                    self._create_coord(cid, coord, Type)
             else:
                 print('skipping cid=%s; use a script and set self.show_cids=[%s] to view' % (cid, cid))
 
@@ -294,7 +302,7 @@ class NastranIO(object):
 
         self.log_info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
         self.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
-        self.log_info("zmin=%s xmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
+        self.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
 
         # add the CAERO/CONM2 elements
         j = 0
@@ -785,7 +793,7 @@ class NastranIO(object):
             self.element_ids = eids
             eidsSet = True
 
-        # subcase_id, resultType, vectorSize, location, dataFormat
+        # subcase_id, resultType, vector_size, location, dataFormat
         if len(model.properties) and self.is_centroidal:
             cases[(0, icase, 'Property_ID', 1, 'centroid', '%i')] = pids
             form0.append(('Property_ID', icase, []))
@@ -811,7 +819,7 @@ class NastranIO(object):
 
             # if not a flat plate
             #if min(nxs) == max(nxs) and min(nxs) != 0.0:
-            # subcase_id, resultType, vectorSize, location, dataFormat
+            # subcase_id, resultType, vector_size, location, dataFormat
             cases[(0, icase, 'Normal_x', 1, 'centroid', '%.1f')] = nxs
             form0.append(('Normal_x', icase, []))
             icase += 1
@@ -892,7 +900,7 @@ class NastranIO(object):
             if abs(pressures).max():
                 case_name = 'Pressure Case=%i' % subcase_id
                 print(case_name)
-                # subcase_id, resultType, vectorSize, location, dataFormat
+                # subcase_id, resultType, vector_size, location, dataFormat
                 cases[(0, case_name, 1, 'centroid', '%.1f')] = pressures
                 form0.append((case_name, icase, []))
                 icase += 1
@@ -1841,10 +1849,12 @@ class NastranIO(object):
             oxx[i] = axial
 
             ## TODO :not sure if this block is general for multiple CBAR elements
-            samax = max(smaxa, smaxb)
-            samin = min(smina, sminb)
-            savm = max(abs([smina, sminb,
-                            smaxa, smaxb, axial]))
+            samax = amax([smaxa, smaxb], axis=0)
+            samin = amin([smaxa, smaxb], axis=0)
+            assert len(samax) == len(i), len(samax)
+            assert len(samin) == len(i)
+            savm = amax(abs([smina, sminb,
+                            smaxa, smaxb, axial]), axis=0)
 
             max_principal[i] = samax
             min_principal[i] = samin
@@ -1966,18 +1976,18 @@ class NastranIO(object):
 
         if is_stress:
             cplates = [
-                model.ctria3_composite_stress, model.cquad4_composite_stress,
-                model.ctria6_composite_stress, model.cquad8_composite_stress,
+                ('CTRIA3', model.ctria3_composite_stress), ('CQUAD4', model.cquad4_composite_stress),
+                ('CTRIA6', model.ctria6_composite_stress), ('CQUAD8', model.cquad8_composite_stress),
                 #model.ctriar_composite_stress, model.cquadr_composite_stress,
             ]
         else:
             cplates = [
-                model.ctria3_composite_strain, model.cquad4_composite_strain,
-                model.ctria6_composite_strain, model.cquad8_composite_strain,
+                ('CTRIA3', model.ctria3_composite_strain), ('CQUAD4', model.cquad4_composite_strain),
+                ('CTRIA6', model.ctria6_composite_strain), ('CQUAD8', model.cquad8_composite_strain),
                 #model.ctriar_composite_strain, model.cquadr_composite_strain,
             ]
 
-        for result in cplates:
+        for cell_type, result in cplates:
             if subcase_id not in result:
                 continue
 
@@ -2003,7 +2013,10 @@ class NastranIO(object):
             ovms = case.data[itime, :, 8]
 
             j = 0
-            for eid, layer in zip(eidsi, layers):
+            for eid in unique(eidsi):
+                ieid = where(eidsi == eid)[0]
+                ieid.sort()
+                layersi = layers[ieid]
                 eid2 = self.eidMap[eid]
                 isElementOn[eid2] = 1.
 
@@ -2015,7 +2028,8 @@ class NastranIO(object):
                 omaxi = 0.
                 omini = 0.
                 ovmi = 0.
-                for ilayer in range(layer):
+                nlayers = len(layersi)
+                for ilayer in range(nlayers):
                     oxxi = max(oxxs[j], oxxi)
                     oyyi = max(oyys[j], oyyi)
                     txyi = max(txys[j], txyi)
@@ -2146,7 +2160,7 @@ class NastranIO(object):
 
         form0 = (word, None, [])
         formis = form0[2]
-        # subcase_id, icase, resultType, vectorSize, location, dataFormat
+        # subcase_id, icase, resultType, vector_size, location, dataFormat
         if is_stress and itime == 0:
             if isElementOn.min() == 0:  # if all elements aren't on
                 ioff = where(isElementOn == 0)[0]
@@ -2215,23 +2229,3 @@ class NastranIO(object):
             ncase += 1
         return icase, ncase, case, header, form0
 
-def main():
-    """
-    Tests Nastran GUI loading
-    """
-    from pyNastran.gui.testing_methods import add_dummy_gui_functions
-    test = NastranIO()
-    test.is_nodal = False
-    test.is_centroidal = True
-
-    add_dummy_gui_functions(test)
-
-    #test.load_panair_geometry('SWB.INP','')
-    test.load_nastran_geometry('bottle_shell_w_holes_pmc.bdf', '')
-    test.load_nastran_results('bottle_shell_w_holes_pmc.op2', '')
-
-    keys = test.resultCases.keys()
-    assert (1, 'Stress1', 1, 'centroid', '%.3f') in keys, keys
-
-if __name__ == '__main__':  # pragma: no cover
-    main()

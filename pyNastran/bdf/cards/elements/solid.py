@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914,W0612
+# pylint: disable=C0103,R0902,R0904,R0914
 """
 All solid elements are defined in this file.  This includes:
 
@@ -234,10 +234,6 @@ class CHEXA8(SolidElement):
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
 
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
-
 
 class CHEXA20(SolidElement):
     """
@@ -362,10 +358,6 @@ class CHEXA20(SolidElement):
     @property
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
 
 class CPENTA6(SolidElement):
@@ -592,10 +584,6 @@ class CPENTA6(SolidElement):
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
 
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
-
 
 class CPENTA15(SolidElement):
     """
@@ -721,10 +709,6 @@ class CPENTA15(SolidElement):
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
-
 
 class CPYRAM5(SolidElement):
     """
@@ -815,10 +799,6 @@ class CPYRAM5(SolidElement):
     @property
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
 
 class CPYRAM13(SolidElement):
@@ -932,10 +912,6 @@ class CPYRAM13(SolidElement):
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
-
 
 class CTETRA4(SolidElement):
     """
@@ -1002,6 +978,23 @@ class CTETRA4(SolidElement):
             for i in range(3):
                 assert isinstance(c[i], float)
 
+    def get_edge_ids(self):
+        """
+        Return the edge IDs
+        """
+        node_ids = self.node_ids
+        return [
+            # base
+            tuple(sorted([node_ids[0], node_ids[1]])),
+            tuple(sorted([node_ids[1], node_ids[2]])),
+            tuple(sorted([node_ids[2], node_ids[0]])),
+
+            # sides
+            tuple(sorted([node_ids[0], node_ids[3]])),
+            tuple(sorted([node_ids[1], node_ids[3]])),
+            tuple(sorted([node_ids[2], node_ids[3]])),
+        ]
+
     def Volume(self):
         (n1, n2, n3, n4) = self.nodePositions()
         return volume4(n1, n2, n3, n4)
@@ -1037,10 +1030,6 @@ class CTETRA4(SolidElement):
     @property
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
 
 class CTETRA10(SolidElement):
@@ -1171,6 +1160,3 @@ class CTETRA10(SolidElement):
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")

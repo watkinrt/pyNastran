@@ -1,7 +1,7 @@
 # pylint: disable=R0904,R0902,C0111,C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, integer_types
+from six import string_types, integer_types, PY2
 from six.moves import zip, range
 
 from pyNastran.bdf.fieldWriter import print_card
@@ -538,6 +538,23 @@ def collapse_thru_packs(fields):
     return singles, doubles
 
 
+def collapse_colon_packs(fields):
+    fields.sort()
+    packs = condense(fields)
+    singles, doubles = build_thru_packs(packs, max_dv=None)
+    doubles2 = []
+    for double in doubles:
+        if len(double) == 3:
+            double[1] = ':'
+        elif len(double) == 5:
+            double[1] = ':'
+            double[3] = ':'
+        else:
+            raise RuntimeError(double)
+        doubles2.append(double)
+    return singles, doubles2
+
+
 def condense(value_list):
     """
     Builds a list of packs (list of 3 values representing the first, last,
@@ -613,14 +630,13 @@ def build_thru_packs(packs, max_dv=1):
                     double = [first_val, 'THRU', last_val]
                     doubles.append(double)
             else:
-                #if by == 1:
-                singlei = list(range(first_val, last_val + by, by))
-                singles += singlei
-                #for val in range(first_val, last_val + 1, by):
-                    #singles.append(val)
-                #else:
-                    #double = [first_val, 'THRU', last_val, 'BY', by]
-                    #doubles.append(double)
+                diff = last_val - first_val
+                if max_dv == 1 or diff == by:
+                    singlei = list(range(first_val, last_val + by, by))
+                    singles += singlei
+                else:
+                    double = [first_val, 'THRU', last_val, 'BY', by]
+                    doubles.append(double)
     return singles, doubles
 
 

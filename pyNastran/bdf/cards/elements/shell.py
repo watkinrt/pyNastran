@@ -136,13 +136,16 @@ class TriShell(ShellElement):
     def __init__(self, card, data):
         ShellElement.__init__(self, card, data)
 
-    def get_edges(self):
+    def get_edge_ids(self):
         """
-        Returns the edges
+        Return the edge IDs
         """
-        return [(self.nodes[0], self.nodes[1]),
-                (self.nodes[1], self.nodes[2]),
-                (self.nodes[2], self.nodes[0])]
+        node_ids = self.node_ids
+        return [
+            tuple(sorted([node_ids[0], node_ids[1]])),
+            tuple(sorted([node_ids[1], node_ids[2]])),
+            tuple(sorted([node_ids[2], node_ids[0]]))
+        ]
 
     def Thickness(self):
         """
@@ -988,15 +991,16 @@ class QuadShell(ShellElement):
     def __init__(self, card, data):
         ShellElement.__init__(self, card, data)
 
-    def get_edges(self):
+    def get_edge_ids(self):
         """
-        Returns the edges
+        Return the edge IDs
         """
+        node_ids = self.node_ids
         return [
-            (self.nodes[0], self.nodes[1]),
-            (self.nodes[1], self.nodes[2]),
-            (self.nodes[2], self.nodes[3]),
-            (self.nodes[3], self.nodes[0]),
+            tuple(sorted([node_ids[0], node_ids[1]])),
+            tuple(sorted([node_ids[1], node_ids[2]])),
+            tuple(sorted([node_ids[2], node_ids[3]])),
+            tuple(sorted([node_ids[3], node_ids[0]]))
         ]
 
     def Thickness(self):

@@ -130,8 +130,6 @@ class OQG(OP2Common):
         else:
             msg = 'table_code=%s' % self.table_code
             return self._not_implemented_or_skip(data, msg)
-        #else:
-            #self._not_implemented_or_skip('bad OQG table')
         return n
 
     def _read_spc_forces(self, data):

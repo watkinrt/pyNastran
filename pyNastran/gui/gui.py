@@ -60,8 +60,33 @@ import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 
-class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, Plot3d_io):
+class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, STL_IO,
+                 TetgenIO, Usm3dIO, Plot3d_io):
+    """
+    MainWindow -> GuiCommon2 -> GuiCommon
+    gui.py     -> gui_common -> gui_qt_common
 
+    glyphs
+    http://www.itk.org/Wiki/VTK/Examples/Python/Visualization/ElevationBandsWithGlyphs
+
+    list of VTK6 classes
+    http://www.vtk.org/doc/nightly/html/annotated.html
+
+    background grid
+    http://www.vtk.org/Wiki/VTK/Examples/Python/Visualization/CubeAxesActor
+
+    pick visible
+    http://www.vtk.org/Wiki/VTK/Examples/Cxx/Filtering/ExtractVisibleCells
+
+    plane projection
+    http://www.igstk.org/Wiki/VTK/Examples/Cxx/SimpleOperations/ProjectPointPlane
+
+    warping
+    http://engronline.ee.memphis.edu/eece4731/djr_lec16.pdf
+
+    banded filter
+    http://www.igstk.org/Wiki/VTK/Examples/Cxx/VisualizationAlgorithms/BandedPolyDataContourFilter
+    """
     def __init__(self, inputs):
         html_logging = True
         GuiCommon2.__init__(self, html_logging, inputs)
@@ -260,6 +285,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
 
 def main():
     app = QtGui.QApplication(sys.argv)
+
     QtGui.QApplication.setOrganizationName("pyNastran")
     QtGui.QApplication.setOrganizationDomain(pyNastran.__website__)
     QtGui.QApplication.setApplicationName("pyNastran")

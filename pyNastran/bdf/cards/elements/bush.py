@@ -34,6 +34,13 @@ class BushElement(Element):
     def Mass(self):
         return 0.
 
+    def get_edge_ids(self):
+        """
+        Return the edge IDs
+        """
+        node_ids = self.node_ids
+        return [tuple(sorted(node_ids))]
+
 class CBUSH(BushElement):
     type = 'CBUSH'
     _field_map = {
@@ -258,10 +265,6 @@ class CBUSH1D(BushElement):
     def node_ids(self):
         return [self.Ga(), self.Gb()]
 
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
-
     def raw_fields(self):
         list_fields = ['CBUSH1D', self.eid, self.Pid(), self.Ga(), self.Gb(),
                        self.Cid()]
@@ -334,10 +337,6 @@ class CBUSH2D(BushElement):
     @property
     def node_ids(self):
         return [self.Ga(), self.Gb()]
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def cross_reference(self, model):
         msg = ' which is required by CBUSH2D eid=%s' % self.eid

@@ -140,6 +140,10 @@ class CMASS1(PointMassElement):
         return c
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         g1 = self.G1()
         g2 = self.G2()
         nodes = []
@@ -219,6 +223,10 @@ class CMASS2(PointMassElement):
         return self.eid
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         g1 = self.G1()
         g2 = self.G2()
         nodes = []
@@ -325,6 +333,10 @@ class CMASS3(PointMassElement):
     def Mass(self):
         return self.pid.mass
 
+    @property
+    def node_ids(self):
+        return [self.s1, self.s2]
+
     def _is_same_card(self, elem, debug=False):
         if self.type != elem.type:
             return False
@@ -362,7 +374,7 @@ class CMASS4(PointMassElement):
     without reference to a property entry
 
     +--------+-----+-----+----+----+
-    | CMASS4 | EID |  M  | G1 | S2 |
+    | CMASS4 | EID |  M  | S1 | S2 |
     +--------+-----+-----+----+----+
     """
     type = 'CMASS4'
@@ -394,6 +406,10 @@ class CMASS4(PointMassElement):
 
     def Mass(self):
         return self.mass
+
+    @property
+    def node_ids(self):
+        return [self.s1, self.s2]
 
     def _is_same_card(self, elem, debug=False):
         if self.type != elem.type:
@@ -572,6 +588,10 @@ class CONM1(PointMassElement):
         return 0.0
 
     def nodeIDs(self):
+        return self.node_ids
+
+    @property
+    def node_ids(self):
         return [self.Nid()]
 
     def Nid(self):
@@ -660,9 +680,9 @@ class CONM2(PointMassElement):
         +-------+--------+-------+-------+---------+------+------+------+-----+
         |   1   |    2   |    3  |   4   |    5    |  6   |  7   |   8  |  9  |
         +-------+--------+-------+-------+---------+------+------+------+-----+
-        | CONM2 | EID    | NID   |  CID  |  MASS   |  X1  |  X2  |  X3  |     |
+        | CONM2 |   EID  |  NID  |  CID  |  MASS   |  X1  |  X2  |  X3  |     |
         +-------+--------+-------+-------+---------+------+------+------+-----+
-        |       |   I11  |   I21 |  I22  |   I31   |  I32 |  I33 |      |     |
+        |       |   I11  |  I21  |  I22  |   I31   |  I32 |  I33 |      |     |
         +-------+--------+-------+-------+---------+------+------+------+-----+
 
         +-------+--------+-------+-------+---------+
@@ -757,10 +777,11 @@ class CONM2(PointMassElement):
         This method seems way more complicated than it needs to be thanks
         to all these little caveats that don't seem to be supported.
         """
-        if self.Cid() == 0:
+        cid = self.Cid()
+        if cid == 0:
             # no transform needed
             X2 = self.nid.Position() + self.X
-        elif self.Cid() == -1:
+        elif cid == -1:
             # case X1, X2, X3 are the coordinates, not offsets, of the center of gravity of
             # the mass in the basic coordinate system.
 
@@ -793,8 +814,12 @@ class CONM2(PointMassElement):
             self.cid = model.Coord(self.cid, msg=msg)
         self.nid = model.Node(self.nid, msg=msg)
 
-    def nodeIDs(self):
+    @property
+    def node_ids(self):
         return [self.Nid()]
+
+    def nodeIDs(self):
+        return self.node_ids
 
     def Nid(self):
         if isinstance(self.nid, integer_types):

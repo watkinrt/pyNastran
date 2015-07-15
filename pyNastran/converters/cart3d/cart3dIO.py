@@ -144,9 +144,7 @@ class Cart3dIO(object):
         cases = {}
         ID = 1
 
-        #print("nElements = ",nElements)
         form, cases = self._fill_cart3d_case(cases, ID, nodes, elements, regions, loads, model)
-        #self._finish_results_io(cases)
         self._finish_results_io2(form, cases)
 
     def clear_cart3d(self):
@@ -156,7 +154,6 @@ class Cart3dIO(object):
         model = Cart3DReader(log=self.log, debug=False)
 
         self.load_cart3d_geometry(cart3d_filename, dirname)
-
 
     def _fill_cart3d_case(self, cases, ID, nodes, elements, regions, loads, model):
         print("is_centroidal=%s isNodal=%s" % (self.is_centroidal, self.is_nodal))

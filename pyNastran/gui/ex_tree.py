@@ -17,16 +17,14 @@ class QTreeView2(QTreeView):
         QTreeView.__init__(self)
 
     def mousePressEvent(self, position):
-    #def openMenu(self, position):
         QTreeView.mousePressEvent(self, position)
-        #print('position = %s' % position)
         indexes = self.selectedIndexes()
-        #print('indexes', indexes)
+
+        # trace the tree to find the selected item
         rows = []
         for index in indexes:
             row = index.row()
             rows.append(row)
-            #print('  %s' % row)
             level = 0
             while index.parent().isValid():
                 index = index.parent()
@@ -34,30 +32,27 @@ class QTreeView2(QTreeView):
                 rows.append(row)
                 level += 1
         rows.reverse()
-        #print('rows = %s' % rows)
 
+        # TODO: what is this for???
         if rows != self.old_rows:
-            #print('rows = %s' % rows)
             self.old_rows = rows
         valid, keys = self.get_row()
 
     def get_row(self):
-        #print('data=%s single=%s' % (self.data, self.single))
+        # if there's only 1 data member, we don't need to extrac the data id
         if self.single:
             return True, self.data[0]
 
-        #keys = []
-        data = deepcopy(self.data)
+        # TODO: what is this for???
         irow = 0
+        data = deepcopy(self.data)
         for row in self.old_rows:
             try:
                 key = data[row][0]
             except IndexError:
                 return False, irow
-            #print('  %r' % key)
             irow = data[row][1]
             data = data[row][2]
-            #keys.append(key)
 
         if data:
             return False, None
@@ -222,7 +217,6 @@ class Sidebar(QWidget):
         print('pulldown...')
 
     def on_apply(self, event):
-        #print('Apply!')
         data = self.result_case_window.data
         validA, keysA = self.result_case_window.treeView.get_row()
 
@@ -238,11 +232,9 @@ class Sidebar(QWidget):
                 self.update_vtk_window(keysA, keysB)
 
     def update_vtk_window(self, keysA, keysB):
-        #print('update')
         if 0:
             #print('keysA = %s' % str(keysA))
             for i, key in enumerate(self.parent.caseKeys):
-                #print('  i=%s key=%s' % (i, key))
                 if key[1] == keysA[0]:
                     break
             #print('*i=%s key=%s' % (i, str(key)))
@@ -255,12 +247,12 @@ class Sidebar(QWidget):
         result_name = 'cat'
         self.parent._set_case(result_name, i, explicit=True)
 
-class ResultsWindow(QWidget):
 
+class ResultsWindow(QWidget):
     def __init__(self, name, data):
         QWidget.__init__(self)
-        self.data = data
         self.name = name
+        self.data = data
 
         self.treeView = QTreeView2(self.data)
         self.treeView.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -299,7 +291,7 @@ class ResultsWindow(QWidget):
                 item = QStandardItem(text)
                 parent.appendRow(item)
 
-                # count_check and
+                # TODO: count_check and ???
                 if nelements == 1 and len(children)==0 and level==0:
                     #self.result_data_window.setEnabled(False)
                     item.setEnabled(False)
@@ -312,7 +304,6 @@ class ResultsWindow(QWidget):
                     #print('item=%s count_check=%s nelements=%s len(children)=%s' % (
                         #text, count_check, nelements, len(children)))
                 if children:
-                    #print('  children=%s' % children)
                     self.addItems(item, children, level + 1, count_check=count_check)
             is_single = redo
             return is_single

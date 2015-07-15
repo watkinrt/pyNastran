@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, unicode_literals, print_function
-from six import string_types, iteritems
+from six import string_types, iteritems, itervalues
 from six.moves import range
 
 # standard library
@@ -42,7 +42,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self._is_axes_shown = True
         self.nvalues = 9
         self.is_wireframe = False
-
         #-------------
         # inputs dict
         self.is_edges = inputs['is_edges']
@@ -96,8 +95,29 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self._logo = logo
 
     def init_ui(self):
-        """ Initialize user iterface"""
-        self.resize(800, 600)
+        """
+        Initialize user iterface
+
+        +--------------+
+        | Window Title |
+        +--------------+----------------+
+        |  Menubar                      |
+        +-------------------------------+
+        |  Toolbar                      |
+        +---------------------+---------+
+        |                     |         |
+        |                     |         |
+        |                     | Results |
+        |       VTK Frame     |  Dock   |
+        |                     |         |
+        |                     |         |
+        +---------------------+---------+
+        |                               |
+        |      HTML Logging Dock        |
+        |                               |
+        +-------------------------------+
+        """
+        self.resize(1000, 700)
         self.statusBar().showMessage('Ready')
 
         # windows title and aplication icon
@@ -116,7 +136,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.res_widget = Sidebar(self)
         self.res_widget.clear_data()
         #self.res_widget.update_results(data)
-
         #self.res_widget.setWidget(sidebar)
 
         self.res_dock.setWidget(self.res_widget)
@@ -483,15 +502,18 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.create_coordinate_system(label='', origin=None, matrix_3x3=None, Type='xyz')
 
     def on_show_hide_axes(self):
+        """
+        show/hide axes
+        """
         # this method should handle all the coords when
         # there are more then one
         if self._is_axes_shown:
-            for key, axis in iteritems(self.axes):
+            for axis in itervalues(self.axes):
                 axis.VisibilityOff()
         else:
-            for key, axis in iteritems(self.axes):
+            for axis in itervalues(self.axes):
                 axis.VisibilityOn()
-        self._is_axes_shown = not(self._is_axes_shown)
+        self._is_axes_shown = not self._is_axes_shown
 
     def create_vtk_actors(self):
         self.rend = vtk.vtkRenderer()
@@ -534,7 +556,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.vtk_interactor.GetRenderWindow().Render()
         #self.load_nastran_geometry(None, None)
         self.textActors = {}
-
 
         #for cid, axes in iteritems(self.axes):
             #self.rend.AddActor(axes)
@@ -835,7 +856,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def _create_load_file_dialog(self, qt_wildcard, Title):
         # getOpenFileName return QString and we want Python string
-        fname, wildcard_level = QtGui.QFileDialog.getOpenFileNameAndFilter(self, Title, self.last_dir, qt_wildcard)
+        fname, wildcard_level = QtGui.QFileDialog.getOpenFileNameAndFilter(
+            self, title, self.last_dir, qt_wildcard)
         return str(wildcard_level), str(fname)
 
     def start_logging(self):
@@ -927,7 +949,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 self.log_error('---invalid format=%r' % geometry_format)
                 is_failed = True
                 return is_failed
-                raise NotImplementedError('on_load_geometry; infile_name=%r format=%r' % (infile_name, geometry_format))
+                #raise NotImplementedError('on_load_geometry; infile_name=%r format=%r' % (infile_name, geometry_format))
             formats = [geometry_format]
             filter_index = 0
         else:
@@ -953,8 +975,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             if infile_name is not None and geometry_format is not None:
                 filter_index = formats.index(geometry_format)
             else:
-                Title = 'Choose a Geometry File to Load'
-                wildcard_index, infile_name = self._create_load_file_dialog(wildcard, Title)
+                title = 'Choose a Geometry File to Load'
+                wildcard_index, infile_name = self._create_load_file_dialog(wildcard, title)
                 #print("infile_name = %r" % infile_name)
                 #print("wildcard_index = %r" % wildcard_index)
                 if not infile_name:
@@ -1046,7 +1068,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             raise RuntimeError(msg)
 
         if out_filename in [None, False]:
-            Title = 'Select a Results File for %s' % self.format
+            title = 'Select a Results File for %s' % self.format
             wildcard = None
             load_function = None
 
@@ -1065,7 +1087,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 msg = 'format=%r has no method to load results' % geometry_format
                 self.log_error(msg)
                 return
-            wildcard_index, out_filename = self._create_load_file_dialog(wildcard, Title)
+            wildcard_index, out_filename = self._create_load_file_dialog(wildcard, title)
         else:
 
             for fmt in self.fmts:
@@ -1109,8 +1131,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.create_vtk_actors()
 
         # build GUI and restore saved application state
+        nice_blue = (0.1, 0.2, 0.4)
         self.restoreGeometry(settings.value("mainWindowGeometry").toByteArray())
-        self.background_col = settings.value("backgroundColor", (0.1, 0.2, 0.4)).toPyObject()
+        self.background_col = settings.value("backgroundColor", nice_blue).toPyObject()
 
         self.init_ui()
         self.init_cell_picker()
@@ -1124,13 +1147,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def setup_post(self, inputs):
         self.load_batch_inputs(inputs)
 
-        #-------------
         shots = inputs['shots']
         geometry_format = inputs['format']  # the active format loaded into the gui
         fname_input = inputs['input']
         fname_output = inputs['output']
         script = inputs['script']
-        #-------------
 
         if shots is None:
             shots = []
@@ -1153,9 +1174,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             filt = QtCore.QString()
             default_filename = ''
 
-            Title = ''
+            title = ''
             if self.Title is not None:
-                Title = self.Title
+                title = self.Title
 
             if self.out_filename is None:
                 default_filename = ''
@@ -1164,7 +1185,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                     default_filename = self.infile_name
             else:
                 base, ext = os.path.splitext(os.path.basename(self.out_filename))
-                default_filename = Title + '_' + base
+                default_filename = title + '_' + base
 
             fname = str(QtGui.QFileDialog.getSaveFileName(self, (
                 'Choose a filename and type'), default_filename, (
@@ -1185,31 +1206,31 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 flt = 'png'
 
         if fname:
-            renderLarge = vtk.vtkRenderLargeImage()
+            render_large = vtk.vtkRenderLargeImage()
             if self.vtk_version[0] >= 6:
-                renderLarge.SetInput(self.rend)
+                render_large.SetInput(self.rend)
             else:
-                renderLarge.SetInput(self.rend)
-            renderLarge.SetMagnification(self.magnify)
+                render_large.SetInput(self.rend)
+            render_large.SetMagnification(self.magnify)
 
             nam, ext = os.path.splitext(fname)
             ext = ext.lower()
-            for nam, exts, ob in (('PostScript', ['.ps'], vtk.vtkPostScriptWriter),
-                                  ("BMP", ['.bmp'], vtk.vtkBMPWriter),
-                                  ('JPG', ['.jpg', '.jpeg'], vtk.vtkJPEGWriter),
-                                  ("TIFF", ['.tif', '.tiff'], vtk.vtkTIFFWriter)):
+            for nam, exts, obj in (('PostScript', ['.ps'], vtk.vtkPostScriptWriter),
+                                   ("BMP", ['.bmp'], vtk.vtkBMPWriter),
+                                   ('JPG', ['.jpg', '.jpeg'], vtk.vtkJPEGWriter),
+                                   ("TIFF", ['.tif', '.tiff'], vtk.vtkTIFFWriter)):
                 if flt == nam:
                     fname = fname if ext in exts else fname + exts[0]
-                    writer = ob()
+                    writer = obj()
                     break
             else:
                 fname = fname if ext == '.png' else fname + '.png'
                 writer = vtk.vtkPNGWriter()
 
             if self.vtk_version[0] >= 6:
-                writer.SetInputData(renderLarge.GetOutputPort())
+                writer.SetInputData(render_large.GetOutputPort())
             else:
-                writer.SetInputConnection(renderLarge.GetOutputPort())
+                writer.SetInputConnection(render_large.GetOutputPort())
             writer.SetFileName(fname)
             writer.Write()
             #self.log_info("Saved screenshot: " + fname)
@@ -1250,17 +1271,18 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.rend.AddActor(self.alt_geometry_actor)
         vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
 
-    def on_update_scalar_bar(self, Title, min_value, max_value, data_format):
-        self.Title = str(Title)
+    def on_update_scalar_bar(self, title, min_value, max_value, data_format):
+        self.Title = str(title)
         self.min_value = float(min_value)
         self.max_value = float(max_value)
+
         try:
             data_format % 1
         except:
             self.log_error("failed applying the data formatter format=%r and should be of the form: '%i', '%8f', '%.2f', '%e', etc.")
             return
         self.data_format = data_format
-        self.log_command('on_update_scalar_bar(%r, %r, %r')
+        self.log_command('on_update_scalar_bar(%r, %r, %r, %r)' % (title, min_value, max_value, data_format))
 
     def ResetCamera(self):
         self.GetCamera().ResetCamera()
@@ -1331,19 +1353,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def _finish_results_io2(self, form, cases):
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
-        #print("ncases =", len(cases))
-        #print("caseKeys =", self.caseKeys)
 
         if len(self.caseKeys) > 1:
-            #print("finish_io case A")
             self.iCase = -1
             self.nCases = len(self.resultCases)  # number of keys in dictionary
         elif len(self.caseKeys) == 1:
-            #print("finish_io case B")
             self.iCase = -1
             self.nCases = 1
         else:
-            #print("finish_io case C")
             self.iCase = -1
             self.nCases = 0
 
@@ -1394,19 +1411,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def _finish_results_io(self, cases):
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
-        #print("ncases =", len(cases))
-        #print("caseKeys =", self.caseKeys)
 
         if len(self.caseKeys) > 1:
-            #print("finish_io case A")
             self.iCase = -1
             self.nCases = len(self.resultCases)  # number of keys in dictionary
         elif len(self.caseKeys) == 1:
-            #print("finish_io case B")
             self.iCase = -1
             self.nCases = 1
         else:
-            #print("finish_io case C")
             self.iCase = -1
             self.nCases = 0
 

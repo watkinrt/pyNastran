@@ -387,7 +387,7 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
     :returns M:    the matrix
     :returns rows: dictionary of keys=rowID,    values=(Grid,Component) for the matrix
     :returns cols: dictionary of keys=columnID, values=(Grid,Component) for the matrix
-    .. warning:: isSparse WILL fail
+    .. warning:: is_sparse=True WILL fail
     """
     i = 0
     rows = {}

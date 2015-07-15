@@ -1,5 +1,5 @@
-# pylint: disable=W0212,C0103,W0633,W0611,W0201,C0301,R0915,R0912
 # coding: utf-8
+# pylint: disable=W0212,W0633,W0611,W0201,C0301,R0915,R0912
 """
 Main BDF class.  Defines:
   - BDF
@@ -201,7 +201,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'PARAM',
 
             ## nodes
-            'GRID', 'GRDSET', 'SPOINT',  # 'RINGAX',
+            'GRID', 'GRDSET', 'SPOINT',
             #'POINT', 'POINTAX', 'RINGAX',
 
             # mass
@@ -209,8 +209,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
             ## elements
             # springs
-            'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-            # 'CELAS5',
+            'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', # 'CELAS5',
             # bushings
             'CBUSH', 'CBUSH1D', 'CBUSH2D',
             # dampers
@@ -1521,6 +1520,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'bcs', 'thermalMaterials', 'phbdys',
             'convectionProperties', ]
 
+        # These are ignored because they're lists
         ignored_types = set([
             'spoints', 'spointi',  # singleton
             'gridSet',  # singleton
@@ -1534,6 +1534,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'sets', 'asets', 'bsets', 'csets', 'qsets',
         ])
 
+        ## TODO: why are some of these ignored?
         ignored_types2 = set([
             'caseControlDeck', 'spcObject2', 'mpcObject2',
 

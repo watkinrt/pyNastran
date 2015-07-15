@@ -34,9 +34,8 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
     def node_ids(self):
         return self._nodeIDs(allowEmptyNodes=False)
 
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
+    def get_edge_ids(self):
+        return [tuple(sorted(self.node_ids))]
 
     def Rho(self):
         r"""returns the material density  \f$ \rho \f$"""

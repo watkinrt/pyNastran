@@ -136,6 +136,13 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         L = norm(self.nodes[1].Position() - self.nodes[0].Position())
         return L
 
+    def get_edge_ids(self):
+        """
+        Return the edge IDs
+        """
+        node_ids = self.node_ids
+        return [(node_ids[0], node_ids[1])]
+
 
 class CBAROR(object):
     type = 'CBAROR'
@@ -327,6 +334,7 @@ class CBAR(LineElement):
         return j
 
     def Length(self):
+        # TODO: consider w1a and w1b in the length formulation
         L = norm(self.gb.Position() - self.ga.Position())
         assert isinstance(L, float)
         return L
@@ -412,6 +420,9 @@ class CBAR(LineElement):
     @property
     def node_ids(self):
         return [self.Ga(), self.Gb()]
+
+    def get_edge_ids(self):
+        return [tuple(sorted(self.node_ids))]
 
     @property
     def nodes(self):

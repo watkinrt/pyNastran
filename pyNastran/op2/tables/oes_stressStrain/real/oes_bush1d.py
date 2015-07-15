@@ -154,12 +154,6 @@ class RealBush1DStress(StressObject):
             axial_strain = self.axial_strain[eid]
             plastic_strain = self.plastic_strain[eid]
             is_failed = self.is_failed[eid]
-            #eType = self.eType[eid]
-            #axial = self.axial[eid]
-            #s1 = self.s1[eid]
-            #s2 = self.s2[eid]
-            #s3 = self.s3[eid]
-            #s4 = self.s4[eid]
 
             vals = [element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed]
             (vals2, is_all_zeros) = self.writeImagFloats13E(vals, is_mag_phase)

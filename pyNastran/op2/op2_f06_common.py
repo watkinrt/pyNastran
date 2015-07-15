@@ -313,6 +313,12 @@ class OP2_F06_Common(object):
         self.strain_energy = {}  # tCode=18
 
     def _get_result_length(self, res_types, res_key):
+        """
+        gets the length of the output data so we can line up:
+
+          RealCRodStrain  - CROD
+          RealCTubeStrain - CTUBE
+        """
         res_length = 0
         for res_type in res_types:
             if res_key in res_type:
@@ -320,9 +326,15 @@ class OP2_F06_Common(object):
                 res_length = max(len(result.__class__.__name__), res_length)
                 continue
             elif len(res_type) != 0:
+                # get the 0th key in the dictionary, where key0 is arbitrary
                 key0 = get_key0(res_type)
+
+                # extract displacement[0]
                 result = res_type[key0]
+
+                # get the class name
                 class_name = result.__class__.__name__
+
                 if not is_release:
                     print('%s - results not found...key=%s' % (class_name, res_key))
             else:  # empty result

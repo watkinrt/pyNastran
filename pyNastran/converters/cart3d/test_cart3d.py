@@ -11,7 +11,7 @@ test_path = os.path.join(pkg_path, 'converters', 'cart3d', 'models')
 
 class TestCart3d(unittest.TestCase):
 
-    def test_1(self):
+    def test_cart3d_io_01(self):
         lines = """7 6
     0.000000 0.000000 0.000000
     1.000000 0.000000 0.000000
@@ -45,7 +45,7 @@ class TestCart3d(unittest.TestCase):
         assert len(regions) == 6, 'nregions=%s' % len(regions)
         assert len(loads) == 0, 'nloads=%s' % len(loads)
 
-    def test_2(self):
+    def test_cart3d_io_02(self):
         lines = """5 3 6
     0. 0. 0.
     1. 0. 0.
@@ -91,7 +91,7 @@ class TestCart3d(unittest.TestCase):
         nnormals = cart3d.get_normals_at_nodes(points, elements, cnormals)
 
 
-    def test_3(self):
+    def test_cart3d_io_03(self):
         infileName = os.path.join(test_path, 'threePlugs.bin.tri')
         outfileName = os.path.join(test_path, 'threePlugs_out.tri')
         outfileName_bin = os.path.join(test_path, 'threePlugs_bin2.tri')

@@ -92,7 +92,7 @@ class RealBushStress(StressObject):
             return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase)
 
         msg = header + [
-            '                                  S T R E S S E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n\n',
+            '                                  S T R E S S E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n \n',
             '                  ELEMENT-ID        STRESS-TX     STRESS-TY     STRESS-TZ    STRESS-RX     STRESS-RY     STRESS-RZ \n',
         ]
 

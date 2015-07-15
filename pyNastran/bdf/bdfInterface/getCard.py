@@ -1,7 +1,7 @@
-# pylint: disable=E1101,C0103,C0111
+# pylint: disable=E1101,C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, iteritems, integer_types
+from six import string_types, iteritems, integer_types, iterkeys
 #import sys
 from numpy import ndarray
 
@@ -49,7 +49,7 @@ class GetMethods(GetMethodsDeprecated):
         elif self.spoints and nid in self.spoints.spoints:
             return SPOINT(nid)
         else:
-            assert isinstance(nid, int), 'nid should be an integer; not %s' % type(nid)
+            assert isinstance(nid, integer_types), 'nid should be an integer; not %s' % type(nid)
             raise RuntimeError('nid=%s is not a GRID or SPOINT%s' % (nid, msg))
 
     def Nodes(self, nids, allowEmptyNodes=False, msg=''):
@@ -325,7 +325,8 @@ class GetMethods(GetMethodsDeprecated):
         if sid in self.loads:
             load = self.loads[sid]
         else:
-            raise KeyError('cannot find LoadID=%r%s.\nLoadIDs=%s\n' % (sid, msg, sorted(self.loads.keys())))
+            raise KeyError('cannot find LoadID=%r%s.\nLoadIDs=%s\n' % (
+                sid, msg, sorted(self.loads.keys())))
         return load
 
     def DLoad(self, sid, msg=''):
@@ -333,7 +334,8 @@ class GetMethods(GetMethodsDeprecated):
         if sid in self.dloads:
             load = self.dloads[sid]
         else:
-            raise KeyError('cannot find DLoadID=%r%s.\nDLoadIDs=%s\n' % (sid, msg, sorted(self.dloads.keys())))
+            raise KeyError('cannot find DLoadID=%r%s.\nDLoadIDs=%s\n' % (
+                sid, msg, sorted(self.dloads.keys())))
         return load
 
     def get_dload_entries(self, sid, msg=''):
@@ -341,7 +343,8 @@ class GetMethods(GetMethodsDeprecated):
         if sid in self.dload_entries:
             load = self.dload_entries[sid]
         else:
-            raise KeyError('cannot find DLoad Entry ID=%r%s.\nDLoadEntryIDs=%s\n' % (sid, msg, sorted(self.dload_entries.keys())))
+            raise KeyError('cannot find DLoad Entry ID=%r%s.\nDLoadEntryIDs=%s\n' % (
+                sid, msg, sorted(self.dload_entries.keys())))
         return load
 
     #--------------------
@@ -673,6 +676,7 @@ class GetMethods(GetMethodsDeprecated):
 
         mids2 = self.get_x_associated_with_y(
             self.elements, None, ['pid', 'mid', 'mid'])
+        #print('*mids2', mids2)
 
         E = self.get_x_associated_with_y(
             self.elements, None, ['pid', 'mid', 'e'])

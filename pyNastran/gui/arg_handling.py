@@ -23,7 +23,7 @@ def run_arg_parse():
     #if mode != 'qt':
     msg += "  -p SCRIPT, --pyscript SCRIPT  path to script file\n"
     msg += "  -s SHOT, --shots SHOT       path to screenshot (only 1 for now)\n"
-    msg += "  -m MAGNIFY, --magnify       MAGNIFY how much should the resolution on a picture be magnified (default=1)\n"
+    msg += "  -m MAGNIFY, --magnify       how much should the resolution on a picture be magnified (default=1)\n"
 
     msg += "  -q, --quiet                 prints debug messages (default=True)\n"
     #if mode != 'qt':
@@ -37,9 +37,9 @@ def run_arg_parse():
     #print(data)
 
     format  = data['--format']
-    input   = data['--input']
-    output  = data['--output']
-    debug   = not(data['--quiet'])
+    input = data['--input']
+    output = data['--output']
+    debug = not(data['--quiet'])
     is_nodal = data['--nodalResults']
     is_centroidal = data['--centroidalResults']
 

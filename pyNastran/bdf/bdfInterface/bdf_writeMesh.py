@@ -1,4 +1,4 @@
-# pylint: disable=E1101,W0612
+# pylint: disable=E1101
 # coding: utf-8
 """
 This file defines:

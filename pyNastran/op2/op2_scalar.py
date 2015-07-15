@@ -537,6 +537,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             self.read_markers([7])
             data = self.read_block()
+            self.binary_debug.write(data + '\n')
             data = self._read_record()
             self.read_markers([-1, 0])
         elif markers == [2,]:  # PARAM, POST, -2
@@ -920,51 +921,51 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """
         self._skip_pcompts()
         return
-        if self.read_mode == 1:
-            return
-        self.log.debug("table_name = %r" % self.table_name)
-        table_name = self.read_table_name(rewind=False)
+        #if self.read_mode == 1:
+            #return
+        #self.log.debug("table_name = %r" % self.table_name)
+        #table_name = self.read_table_name(rewind=False)
 
-        self.read_markers([-1])
-        data = self._read_record()
+        #self.read_markers([-1])
+        #data = self._read_record()
 
-        self.read_markers([-2, 1, 0])
-        data = self._read_record()
-        table_name, = unpack(b'8s', data)
-        #print "table_name = %r" % table_name
+        #self.read_markers([-2, 1, 0])
+        #data = self._read_record()
+        #table_name, = unpack(b'8s', data)
+        ##print "table_name = %r" % table_name
 
-        self.read_markers([-3, 1, 0])
-        markers = self.get_nmarkers(1, rewind=True)
-        if markers != [-4]:
-            data = self._read_record()
+        #self.read_markers([-3, 1, 0])
+        #markers = self.get_nmarkers(1, rewind=True)
+        #if markers != [-4]:
+            #data = self._read_record()
 
-        self.read_markers([-4, 1, 0])
-        markers = self.get_nmarkers(1, rewind=True)
-        if markers != [0]:
-            data = self._read_record()
-        else:
-            self.read_markers([0])
-            return
+        #self.read_markers([-4, 1, 0])
+        #markers = self.get_nmarkers(1, rewind=True)
+        #if markers != [0]:
+            #data = self._read_record()
+        #else:
+            #self.read_markers([0])
+            #return
 
-        self.read_markers([-5, 1, 0])
-        data = self._read_record()
+        #self.read_markers([-5, 1, 0])
+        #data = self._read_record()
 
-        self.read_markers([-6, 1, 0])
-        self.read_markers([0])
+        #self.read_markers([-6, 1, 0])
+        #self.read_markers([0])
 
     def read_table_name(self, rewind=False, stop_on_failure=True):
         """Reads the next OP2 table name (e.g. OUG1, OES1X1)"""
         ni = self.n
         if stop_on_failure:
-            data = self._read_record(debug=False)
+            data = self._read_record(debug=False, macro_rewind=rewind)
             table_name, = unpack(b'8s', data)
-            if self.debug:
+            if self.debug and not rewind:
                 self.binary_debug.write('marker = [4, 2, 4]\n')
                 self.binary_debug.write('table_header = [8, %r, 8]\n\n' % table_name)
             table_name = table_name.strip()
         else:
             try:
-                data = self._read_record()
+                data = self._read_record(macro_rewind=rewind)
                 table_name, = unpack(b'8s', data)
                 table_name = table_name.strip()
             except:
@@ -979,7 +980,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     # if we hit this block, we have a FATAL error
                     raise FatalError('last table=%r' % self.table_name)
                 table_name = None
-                rewind = False  # we're done reading, so we're going to ignore the rewind
+
+                # we're done reading, so we're going to ignore the rewind
+                rewind = False
 
         if rewind:
             self.n = ni
@@ -1195,19 +1198,19 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         print('design_iter=%s iconvergence=%s conv_result=%s obj_intial=%s obj_final=%s constraint_max=%s row_constraint_max=%s desvar_value=%s' % (design_iter, iconvergence, conv_result, obj_intial, obj_final, constraint_max, row_constraint_max, desvar_value))
         self.show_data(datai[32:])
-        asdf
-        for n in [-3, -4, -5, -6, -7,-8,]:
-            self.read_markers([n, 1, 1])
-            markers = self.get_nmarkers(1, rewind=False)
-            #print('markers =', markers)
-            nbytes = markers[0]*4 + 12
-            data = self.f.read(nbytes)
-            #print('intmod data%i' % n)
-            #self.show_data(data)
-            self.n += nbytes
+        raise NotImplementedError()
+        #for n in [-3, -4, -5, -6, -7, -8,]:
+            #self.read_markers([n, 1, 1])
+            #markers = self.get_nmarkers(1, rewind=False)
+            ##print('markers =', markers)
+            #nbytes = markers[0]*4 + 12
+            #data = self.f.read(nbytes)
+            ##print('intmod data%i' % n)
+            ##self.show_data(data)
+            #self.n += nbytes
 
-        n = -9
-        self.read_markers([n, 1, 0, 0])
+        #n = -9
+        #self.read_markers([n, 1, 0, 0])
 
     def get_marker_n(self, nmarkers):
         """
@@ -1360,7 +1363,7 @@ if __name__ == '__main__':  # pragma: no conver
     txt_filename = 'solid_shell_bar.txt'
     f = open(txt_filename, 'wb')
     op2_filename = 'solid_shell_bar.op2'
-    op2 = OP2()
+    op2 = OP2_Scalar()
     op2.read_op2(op2_filename)
     print(op2.displacements[1])
     dump(op2, f)
@@ -1375,7 +1378,7 @@ if __name__ == '__main__':  # pragma: no conver
     #import sys
     #op2_filename = sys.argv[1]
 
-    #o = OP2(op2_filename)
+    #o = OP2_Scalar()
     #o.read_op2(op2_filename)
     #(model, ext) = os.path.splitext(op2_filename)
     #f06_outname = model + '.test_op2.f06'
