@@ -48,7 +48,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.is_nodal = inputs['is_nodal']
         self.is_centroidal = inputs['is_centroidal']
         self.magnify = inputs['magnify']
-        assert self.is_centroidal != self.is_nodal, "is_centroidal and is_nodal can't be the same and are set to \"%s\"" % self.is_nodal
+        if self.is_centroidal == self.is_nodal:
+            msg = "is_centroidal and is_nodal can't be the same and are set to \"%s\"" % self.is_nodal
+            raise RuntimeError(msg)
 
         #self.format = ''
         debug = inputs['debug']
@@ -162,17 +164,17 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if not inputs['format']:
             return
         form = inputs['format'].lower()
-        input = inputs['input']
-        output = inputs['output']
+        input_filename = inputs['input']
+        results_filename = inputs['output']
         plot = True
-        if output:
+        if results_filename:
             plot = False
 
-        is_failed = self.on_load_geometry(input, form, plot=plot)
+        is_failed = self.on_load_geometry(input_filename, form, plot=plot)
         if is_failed:
             return
-        if output:
-            self.on_load_results(output)
+        if results_filename:
+            self.on_load_results(results_filename)
         self._simulate_key_press('r')
         self.vtk_interactor.Modified()
 
@@ -252,7 +254,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #self.menu_scripts = self.menubar.addMenu('&Scripts')
             #for script in scripts:
                 #fname = os.path.join(script_path, script)
-                #tool = (script, script, 'python48.png', None, '', lambda: self.on_run_script(fname) )
+                #tool = (script, script, 'python48.png', None, '',
+                        #lambda: self.on_run_script(fname) )
                 #tools.append(tool)
         #else:
         self.menu_scripts = None
@@ -312,7 +315,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         """
         actions = {}
         for (nam, txt, icon, shortcut, tip, func) in tools:
-            #print("name=%s txt=%s icon=%s short=%s tip=%s func=%s" % (nam, txt, icon, short, tip, func))
+            #print("name=%s txt=%s icon=%s shortcut=%s tip=%s func=%s"
+                  #% (nam, txt, icon, shortcut, tip, func))
             #if icon is None:
                 #print("missing_icon = %r!!!" % nam)
                 #icon = os.path.join(icon_path, 'no.png')
@@ -375,9 +379,16 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         tim = datetime.datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
         msg = cgi.escape(msg)
+
         #message colors
         dark_orange = '#EB9100'
-        cols = {"GUI": "blue", "COMMAND":"green", "GUI ERROR":"Crimson", "DEBUG" : dark_orange}
+        cols = {
+            "GUI" : "blue",
+            "COMMAND" : "green",
+            "GUI ERROR" : "Crimson",
+            "DEBUG" : dark_orange,
+            # INFO - black
+        }
         msg = msg.rstrip().replace('\n', '<br>')
         msg = tim + ' ' + (typ + ': ' + msg) if typ else msg
         if typ in cols:
@@ -622,9 +633,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'is_discrete': True,
             'clicked_ok' : False,
         }
-        legend = LegendPropertiesWindow(data, win_parent=self)
-        legend.show()
-        legend.exec_()
+        window = LegendPropertiesWindow(data, win_parent=self)
+        window.show()
+        window.exec_()
 
         if data['clicked_ok']:
             self.apply_legend(data)
@@ -642,7 +653,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                               is_discrete=is_discrete)
 
     def on_update_legend(self, Title='Title', min_value=0., max_value=1.,
-                         data_format='%.0f', is_blue_to_red=True, is_discrete=True):
+                         data_format='%.0f',
+                         is_blue_to_red=True, is_discrete=True):
         key = self.caseKeys[self.iCase]
         case = self.resultCases[key]
         if len(key) == 5:
@@ -793,11 +805,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.iText += 1
 
     def TurnTextOff(self):
-        for (i, text) in iteritems(self.textActors):
+        for text in itervalues(self.textActors):
             text.VisibilityOff()
 
     def TurnTextOn(self):
-        for (i, text) in iteritems(self.textActors):
+        for text in itervalues(self.textActors):
             text.VisibilityOn()
 
     def build_lookup_table(self):
@@ -1164,6 +1176,69 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if script:
             self.on_run_script(script)
 
+    def init_cell_picker(self):
+        self.is_pick = False
+        self.vtk_interactor.SetPicker(self.cell_picker)
+        #self.vtk_interactor.SetPicker(self.point_picker)
+
+        def annotate_cell_picker(object, event):
+            self.log_command("annotate_cell_picker()")
+            picker = self.cell_picker
+            if picker.GetCellId() < 0:
+                #self.picker_textActor.VisibilityOff()
+                pass
+            else:
+                world_position = picker.GetPickPosition()
+                cell_id = picker.GetCellId()
+                #ds = picker.GetDataSet()
+                select_point = picker.GetSelectionPoint()
+                self.log_command("annotate_picker()")
+                self.log_info("world_position = %s" % str(world_position))
+                self.log_info("cell_id = %s" % cell_id)
+                #self.log_info("data_set = %s" % ds)
+                self.log_info("selPt = %s" % str(select_point))
+
+                #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
+                #self.picker_textActor.SetPosition(select_point[:2])
+                #self.picker_textActor.VisibilityOn()
+
+        def annotate_point_picker(object, event):
+            self.log_command("annotate_point_picker()")
+            picker = self.cell_picker
+            if picker.GetPointId() < 0:
+                #self.picker_textActor.VisibilityOff()
+                pass
+            else:
+                world_position = picker.GetPickPosition()
+                point_id = picker.GetPointId()
+                #ds = picker.GetDataSet()
+                select_point = picker.GetSelectionPoint()
+                self.log_command("annotate_picker()")
+                self.log_info("world_position = %s" % str(world_position))
+                self.log_info("point_id = %s" % point_id)
+                #self.log_info("data_set = %s" % ds)
+                self.log_info("select_point = %s" % str(select_point))
+
+                #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
+                #self.picker_textActor.SetPosition(select_point[:2])
+                #self.picker_textActor.VisibilityOn()
+
+        self.cell_picker.AddObserver("EndPickEvent", annotate_cell_picker)
+        #self.point_picker.AddObserver("EndPickEvent", annotate_point_picker)
+
+    def on_cell_picker(self):
+        self.log_command("on_cell_picker()")
+        picker = self.cell_picker
+        world_position = picker.GetPickPosition()
+        cell_id = picker.GetCellId()
+        #ds = picker.GetDataSet()
+        select_point = picker.GetSelectionPoint()  # get x,y pixel coordinate
+
+        self.log_info("world_position = %s" % str(world_position))
+        self.log_info("cell_id = %s" % cell_id)
+        self.log_info("select_point = %s" % str(select_point))
+        #self.log_info("data_set = %s" % ds)
+
     def take_screenshot(self):
         """ Take a screenshot of a current view and save as a file"""
         self.on_take_screenshot(None)
@@ -1228,7 +1303,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 writer = vtk.vtkPNGWriter()
 
             if self.vtk_version[0] >= 6:
-                writer.SetInputData(render_large.GetOutputPort())
+                writer.SetInputConnection(render_large.GetOutputPort())
             else:
                 writer.SetInputConnection(render_large.GetOutputPort())
             writer.SetFileName(fname)

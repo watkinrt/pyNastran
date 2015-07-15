@@ -140,69 +140,6 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         else:
             self.iren.mousePressEvent(ev)
 
-    def init_cell_picker(self):
-        self.is_pick = False
-        self.vtk_interactor.SetPicker(self.cell_picker)
-        #self.vtk_interactor.SetPicker(self.point_picker)
-
-        def annotate_cell_picker(object, event):
-            self.log_command("annotate_cell_picker()")
-            picker = self.cell_picker
-            if picker.GetCellId() < 0:
-                #self.picker_textActor.VisibilityOff()
-                pass
-            else:
-                world_position = picker.GetPickPosition()
-                cell_id = picker.GetCellId()
-                #ds = picker.GetDataSet()
-                select_point = picker.GetSelectionPoint()
-                self.log_command("annotate_picker()")
-                self.log_info("world_position = %s" % str(world_position))
-                self.log_info("cell_id = %s" % cell_id)
-                #self.log_info("data_set = %s" % ds)
-                self.log_info("selPt = %s" % str(select_point))
-
-                #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
-                #self.picker_textActor.SetPosition(select_point[:2])
-                #self.picker_textActor.VisibilityOn()
-
-        def annotate_point_picker(object, event):
-            self.log_command("annotate_point_picker()")
-            picker = self.cell_picker
-            if picker.GetPointId() < 0:
-                #self.picker_textActor.VisibilityOff()
-                pass
-            else:
-                world_position = picker.GetPickPosition()
-                point_id = picker.GetPointId()
-                #ds = picker.GetDataSet()
-                select_point = picker.GetSelectionPoint()
-                self.log_command("annotate_picker()")
-                self.log_info("world_position = %s" % str(world_position))
-                self.log_info("point_id = %s" % point_id)
-                #self.log_info("data_set = %s" % ds)
-                self.log_info("select_point = %s" % str(select_point))
-
-                #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
-                #self.picker_textActor.SetPosition(select_point[:2])
-                #self.picker_textActor.VisibilityOn()
-
-        self.cell_picker.AddObserver("EndPickEvent", annotate_cell_picker)
-        #self.point_picker.AddObserver("EndPickEvent", annotate_point_picker)
-
-    def on_cell_picker(self):
-        self.log_command("on_cell_picker()")
-        picker = self.cell_picker
-        world_position = picker.GetPickPosition()
-        cell_id = picker.GetCellId()
-        #ds = picker.GetDataSet()
-        select_point = picker.GetSelectionPoint()  # get x,y pixel coordinate
-
-        self.log_info("world_position = %s" % str(world_position))
-        self.log_info("cell_id = %s" % cell_id)
-        self.log_info("select_point = %s" % str(select_point))
-        #self.log_info("data_set = %s" % ds)
-
     def about_dialog(self):
         """ Display about dialog """
         if fmode == 1:  # PyQt
