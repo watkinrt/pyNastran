@@ -52,11 +52,11 @@ class AddMethods(object):
             assert key > 0, 'nid=%s node=%s' % (key, node)
             self.nodes[key] = node
 
-    def add_SPOINT(self, spoint):
+    def add_SPOINT(self, spoints):
         if self.spoints is None:
-            self.spoints = spoint
+            self.spoints = spoints
         else:
-            self.spoints.addSPoints(spoint.spoints)
+            self.spoints.addSPoints(spoints.spoints)
 
     def add_element(self, elem, allowOverwrites=False):
         key = elem.eid
@@ -154,7 +154,7 @@ class AddMethods(object):
         else:
             assert key > 0, 'pid=%s prop=%s' % (key, prop)
             self.pbusht[key] = prop
-			
+		
     def add_PDAMPT(self, prop, allowOverwrites=False):
         key = prop.pid
         if key in self.pdampt and not allowOverwrites:

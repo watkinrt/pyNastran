@@ -47,18 +47,18 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         emap = []
 
         if element.type == 'CQUAD4':
-            quads.append(element.node_ids)
-            quadmap.append(element.eid)
+            nids_quads.append(element.node_ids)
+            eids_quads.append(element.eid)
         elif element.type == 'CTRIA3':
-            tris.append(element.node_ids)
-            trimap.append(element.eid)
+            nids_tris.append(element.node_ids)
+            eids_tris.append(element.eid)
         else:
             raise NotImplementedError(element.type)
 
-    quads = array(quads, dtype='int32') - 1
-    #quadmap = array(quadmap, dtype='int32')
-    tris = array(tris, dtype='int32') - 1
-    #trimap = array(trimap, dtype='int32')
+    nids_quads = array(quads, dtype='int32') - 1
+    #eids_quads = array(quadmap, dtype='int32')
+    nids_tris = array(tris, dtype='int32') - 1
+    #eids_tris = array(trimap, dtype='int32')
 
     # build the kdtree
     try:
@@ -69,7 +69,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
 
     # find the node ids of interest
     nids_new = unique(hstack([
-        quads.flatten(), tris.flatten()
+        nids_quads.flatten(), nids_tris.flatten()
     ]))
     nids_new.sort()
     inew = searchsorted(nids, nids_new, side='left')
@@ -126,7 +126,56 @@ def _write_nodes(self, outfile, size, is_double):
         outfile.write(''.join(msg))
 
 
-def main():
+def eq2():
+    lines = [
+        '$pyNastran: version=msc',
+        '$pyNastran: punch=True',
+        '$pyNastran: encoding=ascii',
+        '$NODES',
+        '$ Nodes to merge:',
+        '$ 5987 10478',
+        '$   GRID        5987           35.46     -6.      0.',
+        '$   GRID       10478           35.46     -6.      0.',
+        '$ 5971 10479',
+        '$   GRID        5971           34.92     -6.      0.',
+        '$   GRID       10479           34.92     -6.      0.',
+        '$ 6003 10477',
+        '$   GRID        6003             36.     -6.      0.',
+        '$   GRID       10477             36.     -6.      0.',
+        'GRID        5971           34.92     -6.      0.',
+        'GRID        5972           34.92-5.73333      0.',
+        'GRID        5973           34.92-5.46667      0.',
+        'GRID        5987           35.46     -6.      0.',
+        'GRID        5988           35.46-5.73333      0.',
+        'GRID        5989           35.46-5.46667      0.',
+        'GRID        6003             36.     -6.      0.',
+        'GRID        6004             36.-5.73333      0.',
+        'GRID        6005             36.-5.46667      0.',
+        'GRID       10476             36.     -6.    -1.5',
+        'GRID       10477             36.     -6.      0.',
+        'GRID       10478           35.46     -6.      0.',
+        'GRID       10479           34.92     -6.      0.',
+        'GRID       10561           34.92     -6.    -.54',
+        '$ELEMENTS_WITH_PROPERTIES',
+        'PSHELL         1       1      .1',
+        'CQUAD4      5471       1    5971    5987    5988    5972',
+        'CQUAD4      5472       1    5972    5988    5989    5973',
+        'CQUAD4      5486       1    5987    6003    6004    5988',
+        'CQUAD4      5487       1    5988    6004    6005    5989',
+        'PSHELL        11       1      .1',
+        'CTRIA3      9429      11   10561   10476   10478',
+        'CTRIA3      9439      11   10478   10479   10561',
+        'CTRIA3      9466      11   10476   10477   10478',
+        '$MATERIALS',
+        'MAT1           1      3.              .3',
+    ]
+    bdf_filename = 'nonunique2.bdf'
+    f = open(bdf_filename, 'wb')
+    f.write('\n'.join(lines))
+    f.close()
+    bdf_equivalence_nodes('nonunique2.bdf', 'unique2.bdf', 0.01)
+
+def eq1():
     msg = 'CEND\n'
     msg += 'BEGIN BULK\n'
     msg += 'GRID,1,,0.,0.,0.\n'
@@ -142,7 +191,6 @@ def main():
     msg += 'MAT1,1,3.0,, 0.3\n'
     msg += 'ENDDATA'
 
-
     bdf_filename = 'nonunique.bdf'
 
     f = open(bdf_filename, 'wb')
@@ -154,4 +202,5 @@ def main():
     bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol)
 
 if __name__ == '__main__':
-    main()
+    eq1()
+    eq2()

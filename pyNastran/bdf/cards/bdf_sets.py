@@ -1,6 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import integer_types
 from six.moves import zip, range
 
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru, collapse_thru_packs

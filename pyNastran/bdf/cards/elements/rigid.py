@@ -104,6 +104,9 @@ class RBAR(RigidElement):
             return self.gb
         return self.gb.nid
 
+    def cross_reference(self, model):
+        pass
+
     def raw_fields(self):
         list_fields = ['RBAR', self.eid, self.Ga(), self.Gb(), self.cna,
                        self.cnb, self.cma, self.cmb, self.alpha]
@@ -159,6 +162,9 @@ class RBAR1(RigidElement):
         if isinstance(self.gb, integer_types) or self.gb is None:
             return self.gb
         return self.gb.nid
+
+    def cross_reference(self, model):
+        pass
 
     def raw_fields(self):
         list_fields = ['RBAR1', self.eid, self.Ga(), self.Gb(), self.cb, self.alpha]
@@ -237,6 +243,9 @@ class RBE1(RigidElement):  # maybe not done, needs testing
             else:
                 assert cmi is None
             i += 2
+
+    def cross_reference(self, model):
+        pass
 
     @property
     def Gni_node_ids(self):
@@ -431,6 +440,8 @@ class RBE2(RigidElement):
             msg += '\n'
         return msg
 
+    def cross_reference(self, model):
+        pass
 
     def Gn(self):
         if isinstance(self.gn, integer_types) or self.gn is None:
@@ -586,6 +597,9 @@ class RBE3(RigidElement):
     @property
     def Gmi_node_ids(self):
         return self.Gmi
+
+    def cross_reference(self, model):
+    pass
 
     def raw_fields(self):
         list_fields = ['RBE3', self.eid, None, self.ref_grid_id, self.refc]

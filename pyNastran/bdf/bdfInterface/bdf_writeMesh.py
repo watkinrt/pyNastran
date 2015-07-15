@@ -625,15 +625,10 @@ class WriteMesh(object):
         """Writes the properties in a sorted order"""
         if self.properties:
             msg = ['$PROPERTIES\n']
-            for (unused_pid, prop) in sorted(iteritems(self.properties)):
-                msg.append(prop.write_card(size, is_double))
-
-            for card in sorted(itervalues(self.pbusht)):
-                msg.append(card.write_card(size, is_double))
-            for card in sorted(itervalues(self.pdampt)):
-                msg.append(card.write_card(size, is_double))
-            for card in sorted(itervalues(self.pelast)):
-                msg.append(card.write_card(size, is_double))
+            prop_groups = (self.properties, self.pelast, self.pdampt, self.pbusht)
+            for prop_group in prop_groups:
+                for prop_group in prop_groups:
+                    msg.append(prop.write_card(size, is_double))
             outfile.write(''.join(msg))
 
     def _write_rejects(self, outfile, size=8, is_double=False):

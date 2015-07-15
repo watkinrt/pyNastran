@@ -1,4 +1,3 @@
-# pylint: disable=C0103,R0902,R0904,R0915
 """
 All bush properties are defined in this file.  This includes:
 
@@ -393,6 +392,7 @@ class PBUSHT(BushingProperty):
         BushingProperty.__init__(self, card, data)
         if comment:
             self._comment = comment
+
         if card:
             raise NotImplementedError()
         else:

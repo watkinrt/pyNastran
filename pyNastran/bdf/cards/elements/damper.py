@@ -306,14 +306,16 @@ class CDAMP4(LineDamper):
         if comment:
             self._comment = comment
         if card:
-            self.eid = integer(card, 1, 'eid')
+            icard = 0
+            ioffset = icard * 4
+            self.eid = integer(card, 1 + ioffset, 'eid')
             #: Value of the scalar damper (Real)
-            self.b = double(card, 2, 'b')
+            self.b = double(card, 2 + ioffset, 'b')
             nids = [
-                    integer_or_blank(card, 3, 'n1', 0),
-                    integer_or_blank(card, 4, 'n2', 0)
+                integer_or_blank(card, 3 + ioffset, 'n1', 0),
+                integer_or_blank(card, 4 + ioffset, 'n2', 0)
             ]
-            assert len(card) <= 5, 'len(CDAMP4 card) = %i' % len(card)
+            assert len(card) <= 9, 'len(CDAMP4 card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.b = data[1]

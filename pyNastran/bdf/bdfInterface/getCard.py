@@ -438,6 +438,13 @@ class GetMethods(GetMethodsDeprecated):
             raise KeyError('aid=%s not found%s.  Allowed AESTATs=%s'
                            % (aid, msg, self.aestats.keys()))
 
+    def AELIST(self, aid, msg=''):
+        try:
+            return self.aelists[aid]
+        except KeyError:
+            raise KeyError('id=%s not found%s.  Allowed AELISTs=%s'
+                           % (aid, msg, self.aelists.keys()))
+
     def AELink(self, linkID, msg=''):
         try:
             return self.aelinks[linkID]

@@ -414,6 +414,8 @@ class AESURF(BaseCard):
             return self.alid2
         return self.alid2.sid
 
+    def cross_reference(self, model):
+        pass
     def raw_fields(self):
         """
         Gets the fields in their unmodified form

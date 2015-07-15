@@ -60,7 +60,7 @@ Cross-referencing allows you to easily jump across cards and also helps
 with calculating things like position, area, and mass.  The BDF is designed
 around the idea of cross-referencing, so it's recommended that you use it.
 """
-# pylint: disable=E1101,C0103,R0902,R0904,R0914,W0611
+# pylint: disable=E1101,C0103,R0902,R0904,R0914
 
 from __future__ import print_function
 from six import iteritems, itervalues
@@ -84,6 +84,7 @@ class XrefMesh(object):
     def cross_reference(self, xref=True,
                         xref_elements=True,
                         xref_properties=True,
+                        xef_masses=True,
                         xref_materials=True,
                         xref_loads=True,
                         xref_constraints=True,
@@ -94,6 +95,7 @@ class XrefMesh(object):
         :param xref:             cross references the model (default=True)
         :param xref_element:     set cross referencing of elements (default=True)
         :param xref_properties:  set cross referencing of properties (default=True)
+        :param xref_masses       set cross referencing of CMASS/PMASS (default=True)
         :param xref_materials:   set cross referencing of materials (default=True)
         :param xref_loads:       set cross referencing of loads (default=True)
         :param xref_constraints: set cross referencing of constraints (default=True)
@@ -120,7 +122,8 @@ class XrefMesh(object):
                 self._cross_reference_elements()
             if xref_properties:
                 self._cross_reference_properties()
-            self._cross_reference_masses()
+            if xref_masses:
+                self._cross_reference_masses()
             if xref_materials:
                 self._cross_reference_materials()
 

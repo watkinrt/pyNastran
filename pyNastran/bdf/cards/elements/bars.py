@@ -625,6 +625,9 @@ class CBEND(LineElement):
     def repr_fields(self):
         return self.raw_fields()
 
+    def cross_reference(self, model):
+        pass
+
     def write_card(self, size, is_double):
         card = self.repr_fields()
         if size == 8:

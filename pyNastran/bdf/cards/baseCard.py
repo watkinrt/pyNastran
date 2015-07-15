@@ -460,7 +460,7 @@ def expand_thru_by(fields, set_fields=True, sort_fields=False):
     return out
 
 
-def expand_thru_exclude(self, fields):
+def expand_thru_exclude(fields):
     """
     Expands a list of values of the form [1,5,THRU,11,EXCEPT,7,8,13]
     to be [1,5,6,9,10,11,13]
@@ -607,14 +607,20 @@ def build_thru_packs(packs, max_dv=1):
         else:
             if by == 1:
                 if last_val - first_val < 3: # dont make extra THRU cards
-                    for val in range(first_val, last_val + 1):
-                        singles.append(val)
+                    singlei = list(range(first_val, last_val + 1, 1))
+                    singles += singlei
                 else:
                     double = [first_val, 'THRU', last_val]
                     doubles.append(double)
             else:
-                for val in range(first_val, last_val + 1, by):
-                    singles.append(val)
+                #if by == 1:
+                singlei = list(range(first_val, last_val + by, by))
+                singles += singlei
+                #for val in range(first_val, last_val + 1, by):
+                    #singles.append(val)
+                #else:
+                    #double = [first_val, 'THRU', last_val, 'BY', by]
+                    #doubles.append(double)
     return singles, doubles
 
 
@@ -654,8 +660,7 @@ def build_thru(packs, max_dv=None):
                     fields.append('BY')
                     fields.append(dv)
                 else:
-                    for v in range(first_val, last_val + dv, dv):
-                        fields.append(v)
+                    fields += list(range(first_val, last_val + dv, dv))
             else:
                 for v in range(first_val, last_val + dv, dv):
                     fields.append(v)
