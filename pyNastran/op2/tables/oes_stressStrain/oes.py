@@ -285,7 +285,6 @@ class OES(OP2Common):
             # 1-CROD
             # 3-CTUBE
             # 10-CONROD
-
             if self.isStress():
                 obj_real = RealRodStress
                 obj_complex = ComplexRodStress

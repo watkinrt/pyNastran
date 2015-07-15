@@ -599,7 +599,7 @@ class RBE3(RigidElement):
         return self.Gmi
 
     def cross_reference(self, model):
-    pass
+        pass
 
     def raw_fields(self):
         list_fields = ['RBE3', self.eid, None, self.ref_grid_id, self.refc]

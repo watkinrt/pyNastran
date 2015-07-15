@@ -111,15 +111,16 @@ class TestReadWrite(unittest.TestCase):
     def test_include_end(self):
         """this test fails incorrectly"""
         if PY2:
-            f = open('b.bdf', 'wb')
+            wb = 'wb'
         else:
-            f = open('b.bdf', 'w')
+            wb = 'w'
         f = open('a.bdf', wb)
         f.write('CEND\n')
         f.write('BEGIN BULK\n')
         f.write('GRID,1\n')
         f.write("INCLUDE 'b.bdf'\n\n")
 
+        f = open('b.bdf', wb)
         f.write('GRID,2\n')
         f.write("INCLUDE 'c.bdf'\n\n")
 

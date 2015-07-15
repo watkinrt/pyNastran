@@ -626,9 +626,10 @@ class WriteMesh(object):
         if self.properties:
             msg = ['$PROPERTIES\n']
             prop_groups = (self.properties, self.pelast, self.pdampt, self.pbusht)
-            for prop_group in prop_groups:
+            if 1:
                 for prop_group in prop_groups:
-                    msg.append(prop.write_card(size, is_double))
+                    for unused_pid, prop in sorted(iteritems(prop_group)):
+                        msg.append(prop.write_card(size, is_double))
             outfile.write(''.join(msg))
 
     def _write_rejects(self, outfile, size=8, is_double=False):

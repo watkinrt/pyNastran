@@ -51,8 +51,8 @@ def compare_card_content(fem1, fem2):
         'loads', 'coords',
         'spcs', 'spcadds', 'mpcs', 'mpcadds', 'dareas',
         'nlparms', 'tsteps', 'tstepnls', 'dmigs', 'dequations', 'frequencies',
-        'sets', 'asets', 'bsets', 'csets', 'qsets', 'usets',
-        'se_sets', 'se_bsets', 'se_csets', 'se_qsets', 'se_usets',
+        'sets', 'asets', 'bsets', 'csets', 'qsets', #'usets',
+        #'se_sets', 'se_bsets', 'se_csets', 'se_qsets', 'se_usets',
         'tables', 'randomTables', 'methods', 'cMethods']
     for name in check_obj_names:
         check_length(fem1, fem2, name)

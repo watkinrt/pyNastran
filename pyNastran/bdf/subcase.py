@@ -1,9 +1,9 @@
-# pylint: disable=C0103,R0201
+# pylint: disable=C0103
 """
 Subcase creation/extraction class
 """
 from __future__ import print_function
-from six import string_types, iteritems
+from six import string_types, integer_types, iteritems, PY2
 
 class Subcase(object):
     """
