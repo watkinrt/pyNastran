@@ -872,6 +872,7 @@ class GRID(Node):
         Node.__init__(self, card, data)
 
         if card:
+            nfields = len(card)
             #: Node ID
             self.nid = integer(card, 1, 'nid')
 
@@ -884,15 +885,20 @@ class GRID(Node):
                 double_or_blank(card, 4, 'x2', 0.),
                 double_or_blank(card, 5, 'x3', 0.)], dtype='float64')
 
-            #: Analysis coordinate system
-            self.cd = integer_or_blank(card, 6, 'cd', 0)
+            if nfields > 6:
+                #: Analysis coordinate system
+                self.cd = integer_or_blank(card, 6, 'cd', 0)
 
-            #: SPC constraint
-            self.ps = str(integer_or_blank(card, 7, 'ps', ''))
+                #: SPC constraint
+                self.ps = unicode(integer_or_blank(card, 7, 'ps', ''))
 
-            #: Superelement ID
-            self.seid = integer_or_blank(card, 8, 'seid', 0)
-            assert len(card) <= 9, 'len(GRID card) = %i' % len(card)
+                #: Superelement ID
+                self.seid = integer_or_blank(card, 8, 'seid', 0)
+                assert len(card) <= 9, 'len(GRID card) = %i' % len(card)
+            else:
+                self.cd = 0
+                self.ps = ''
+                self.seid = 0
         else:
             self.nid = data[0]
             self.cp = data[1]
