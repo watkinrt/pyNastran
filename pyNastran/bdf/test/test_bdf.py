@@ -281,10 +281,10 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
             raise
     #except AttributeError:  # only temporarily uncomment this when running lots of tests
         #pass
-    #except SyntaxError:  # only temporarily uncomment this when running lots of tests
-        #pass
-    #except AssertionError:  # only temporarily uncomment this when running lots of tests
-        #pass
+    except SyntaxError:  # only temporarily uncomment this when running lots of tests
+        pass
+    except AssertionError:  # only temporarily uncomment this when running lots of tests
+        pass
     except SystemExit:
         sys.exit('sys.exit...')
     except:

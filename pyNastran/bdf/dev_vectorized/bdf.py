@@ -1465,7 +1465,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
                 break
 
             if not self.is_reject(card_name):
-                self.add_card(lines, card_name, comment, is_list=False)
+                self.add_card(lines, card_name, comment, is_list=False, has_None=False)
                 icard += 1
             else:
                 if self.echo:
@@ -1612,7 +1612,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         self._increase_card_count(card_name)
 
-    def add_card(self, card_lines, card_name, comment='', is_list=True):
+    def add_card(self, card_lines, card_name, comment='', is_list=True, has_none=True):
         """
         Adds a card object to the BDF object.
 
@@ -1656,7 +1656,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
                                           else None for field in fields])
             else:  # leave everything as strings
                 card = wipe_empty_fields(fields)
-            card_obj = BDFCard(card)
+            card_obj = BDFCard(card, has_none=has_none)
 
         # function that gets by name the initialized object (from global scope)
 

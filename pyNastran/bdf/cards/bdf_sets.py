@@ -518,7 +518,7 @@ class SET1(Set):
         return s1.symmetric_difference(s2)
 
     def add_set(self, set1):
-        self.IDs += set1.get_IDs
+        self.IDs += set1.get_IDs()
         self.clean_ids()
 
     def IsSkin(self):

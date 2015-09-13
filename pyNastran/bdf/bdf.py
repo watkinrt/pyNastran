@@ -855,7 +855,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             #'POINT', 'POINTAX', 'RINGAX',
 
             # CMASS4 lies in the QRG
-            'masses' : ['CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3'],
+            'masses' : ['CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4'],
 
             'elements' : [
                 'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
@@ -2067,10 +2067,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         class_instance = card_class(card_obj, comment=comment)
         self.add_element(class_instance)
 
-    def _add_card_new(self, card_lines, card_name, comment='', is_list=True):
+    def _add_card_new(self, card_lines, card_name, comment='', is_list=True, has_none=True):
         """Clearer and slightly faster version of add_card that hasn't been tested/finished"""
         card_name = card_name.upper()
-        card_obj, card = self.create_card_object(card_lines, card_name, is_list=is_list)
+        card_obj, card = self.create_card_object(card_lines, card_name, is_list=is_list, has_none=has_none)
 
         if self._auto_reject:
             self.reject_cards.append(card)
@@ -2911,14 +2911,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                     self._increase_card_count(card_name)
                     self.rejects.append([cardi[0]] + cardi[1])
             else:
-                if 0:
+                if 1:
                     self._make_card_parser()
                     for comment, card_lines in card:
-                        self._add_card_new(card_lines, card_name, comment=comment, is_list=False)
+                        self._add_card_new(card_lines, card_name, comment=comment, is_list=False, has_none=False)
                 else:
                     for comment, card_lines in card:
                         assert card_lines != []
-                        self.add_card(card_lines, card_name, comment=comment, is_list=False)
+                        self.add_card(card_lines, card_name, comment=comment, is_list=False, has_none=False)
 
     def _parse_dynamic_syntax(self, key):
         """

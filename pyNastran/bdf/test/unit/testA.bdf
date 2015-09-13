@@ -30,6 +30,8 @@ CELAS2  7001    1.0+6                   1002    1
 JUNK    asdf    345634
 CQUAD   16410   16411   16411   16412   16413   16414   16415   16416   +QD1
 +QD1    16417   16418   16419
+CTRIA6  6       101     5       12      14      8       13              +T62
++T62    23.0
 $UNASSOCIATED_PROPERTIES
 PBUSH          1       K 100000.
                      RCV     1.5      1.      1.      1.

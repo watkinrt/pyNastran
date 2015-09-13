@@ -57,9 +57,9 @@ def components_or_blank(card, ifield, fieldname, default=None):
     :param fieldname: name of field
     :param default:   the default value for the field (default=None)
     """
-    assert isinstance(card, BDFCard), type(card)
-    assert isinstance(ifield, int), type(ifield)
-    assert isinstance(fieldname, string_types), type(fieldname)
+    #assert isinstance(card, BDFCard), type(card)
+    #assert isinstance(ifield, int), type(ifield)
+    #assert isinstance(fieldname, string_types), type(fieldname)
     svalue = card.field(ifield)
     assert isinstance(svalue, string_types), 'card=%s type(%s=%s)=%s' % (str(card), fieldname, ifield, svalue)
 
@@ -81,10 +81,9 @@ def blank(card, ifield, fieldname, default=None):
     #assert isinstance(fieldname, string_types), type(fieldname)
     svalue = card.field(ifield)
     assert isinstance(svalue, string_types), 'card=%s type(%s=%s)=%s' % (str(card), fieldname, ifield, svalue)
-    if isinstance(svalue, string_types):
-        svalue = svalue.strip().upper()
-        if len(svalue) == 0:
-            return default
+    svalue = svalue.strip()
+    if len(svalue) == 0:
+        return default
     dtype = _get_dtype(svalue)
     raise SyntaxError('%s = %r (field #%s) on card must be blank (not %s).\n'
                       'card=%s' % (fieldname, svalue, ifield, dtype, card))
@@ -241,11 +240,6 @@ def double(card, ifield, fieldname):
         #raise SyntaxError('%s (field #%s) on card must be a float, but doesnt exist..\n'
                           #'card=%s' % (fieldname, ifield, card))
 
-    if len(svalue) == 0:  ## None
-        dtype = _get_dtype(svalue)
-        raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\n'
-                          'card=%s' % (fieldname, svalue, ifield, dtype, card))
-
     if svalue.isdigit():
         # if only int
         dtype = _get_dtype(int(svalue))
@@ -261,6 +255,11 @@ def double(card, ifield, fieldname):
         raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\n'
                           'card=%s' % (fieldname, svalue, ifield, dtype, card))
     except ValueError:
+        if len(svalue) == 0:  ## None
+            dtype = _get_dtype(svalue)
+            raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\n'
+                              'card=%s' % (fieldname, svalue, ifield, dtype, card))
+
         # 1D+3, 1D-3, 1-3
         try:
             svalue = svalue.upper()
@@ -311,16 +310,26 @@ def double_or_blank(card, ifield, fieldname, default=None):
     #except IndexError:
         #return default
 
-    if isinstance(svalue, string_types):
-        if not svalue:
-            return default
-        try:
-            return double(card, ifield, fieldname)
-        except:
-            dtype = _get_dtype(svalue)
-            raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\n'
-                              'card=%s' % (fieldname, svalue, ifield, dtype, card))
+    #if isinstance(svalue, string_types):
+    if not svalue:
+        return default
+    try:
+        return double(card, ifield, fieldname)
+    except:
+        dtype = _get_dtype(svalue)
+        raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\n'
+                          'card=%s' % (fieldname, svalue, ifield, dtype, card))
     return default
+    #try:
+        #return double(card, ifield, fieldname)
+    #except SyntaxError:
+        #if not svalue.strip():
+            #return default
+        #dtype = _get_dtype(svalue)
+        #raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\n'
+                          #'card=%s' % (fieldname, svalue, ifield, dtype, card))
+    #return default
+
 
 def double_or_string(card, ifield, fieldname):
     """
@@ -340,15 +349,7 @@ def double_or_string(card, ifield, fieldname):
         #raise SyntaxError('%s (field #%s) on card must be a float or string (not blank).\n'
                           #'card=%s' % (fieldname, ifield, card))
 
-    if isinstance(svalue, (float, float32)):
-        return svalue
-    elif svalue is None or isinstance(svalue, integer_types):
-        dtype = _get_dtype(svalue)
-        raise SyntaxError('%s = %r (field #%s) on card must be an float or string (not %s).\n'
-                          'card=%s' % (fieldname, svalue, ifield, dtype, card))
-    elif isinstance(svalue, string_types):
-        svalue = svalue.strip()
-
+    svalue = svalue.strip()
     if '.' in svalue:
         # float
         try:
@@ -422,13 +423,6 @@ def integer_or_double(card, ifield, fieldname):
         #raise SyntaxError('%s (field #%s) on card must be an integer or float.\n'
                           #'card=%s' % (fieldname, ifield, card) )
 
-    if isinstance(svalue, int) or isinstance(svalue, (float, float32)):
-        return svalue
-    elif svalue is None:
-        dtype = _get_dtype(svalue)
-        raise SyntaxError('%s = %r (field #%s) on card must be an integer or float (not %s).\n'
-                          'card=%s' % (fieldname, svalue, ifield, dtype, card))
-
     if '.' in svalue:
         # float/exponent
         try:
@@ -462,8 +456,7 @@ def integer_double_or_blank(card, ifield, fieldname, default=None):
     #assert isinstance(ifield, int), type(ifield)
     #assert isinstance(fieldname, string_types), type(fieldname)
     #try:
-    svalue = card.field(ifield)
-    assert isinstance(svalue, string_types), 'card=%s type(%s=%s)=%s' % (str(card), fieldname, ifield, svalue)
+    svalue = card.field(ifield).strip()
     #except IndexError:
     #    return default
 
@@ -534,7 +527,7 @@ def integer_string_or_blank(card, ifield, fieldname, default=None):
     #except IndexError:
         #return default
 
-    if svalue.strip():
+    if svalue:
         # integer/string
         #try:
         return integer_or_string(card, ifield, fieldname)
@@ -661,23 +654,6 @@ def string_or_blank(card, ifield, fieldname, default=None):
         return svalue
     return default
 
-# int                    - done
-# int/blank              - done
-# int/float              - done
-# int/float/blank        - done
-# int/float/string       - done
-# int/float/string/blank - done
-# int/string             - done
-# int/string/blank       - done
-
-# float              - done
-# float/blank        - done
-# float/string       - done
-# float/string/blank - done
-
-# string       - done
-# string/blank - done
-
 
 def interpret_value(value_raw, card=''):
     """
@@ -802,7 +778,7 @@ def interpret_value(value_raw, card=''):
         #elif s.isalpha() or s in "()*/=]['\"":
             #return 'string'  # string character
         #else:
-            #msg = "s=|%r|" % s
+            #msg = "s=%r" % s
             #raise SyntaxError(msg)
 
         #if i == 0:

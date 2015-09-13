@@ -169,7 +169,7 @@ class XrefMesh(object):
 
     def cross_reference(self, xref=True,
                         xref_elements=True,
-                        xref_nodes_with_elements=True,
+                        xref_nodes_with_elements=False,
                         xref_properties=True,
                         xref_masses=True,
                         xref_materials=True,
