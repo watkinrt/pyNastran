@@ -121,7 +121,7 @@ from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 from pyNastran.bdf.bdfInterface.bdf_writeMesh import WriteMesh
 from pyNastran.bdf.bdfInterface.crossReference import XrefMesh, CrossReferenceError
 from pyNastran.bdf.bdfInterface.attributes import BDFAttributes
-
+from pyNastran.bdf.field_writer_16 import print_field_16
 
 class DuplicateIDsError(RuntimeError):
     pass
@@ -987,7 +987,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             'transfer_functions' : ['TF'],
             'delays' : ['DELAY'],
 
-            'frequencies' : ['FREQ', 'FREQ1', 'FREQ2'],
+            'frequencies' : ['FREQ', 'FREQ1', 'FREQ2', 'FREQ4'],
 
             # direct matrix input cards
             'dmigs' : ['DMIG'],
@@ -1534,7 +1534,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         card[0] = card_name
         return card
 
-    def create_card_object(self, card_lines, card_name, is_list=True):
+    def create_card_object(self, card_lines, card_name, is_list=True, has_none=True):
         card_name = card_name.upper()
         self._increase_card_count(card_name)
         if card_name in ['DEQATN']:
@@ -1548,17 +1548,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
 
             # apply OPENMDAO syntax
             if self._is_dynamic_syntax:
-                fields = [self._parse_dynamic_syntax(field) if '%' in
-                          field[0:1] else field for field in fields]
+                fields = [print_field_16(self._parse_dynamic_syntax(field)) if '%' in
+                          field.strip()[0:1] else print_field_16(field) for field in fields]
+                has_none = False
 
-                card = wipe_empty_fields([interpret_value(field, fields)
-                                          if field is not None
-                                          else None for field in fields])
-                                          #else '' for field in fields])  # has_none; remove previous
-                has_nones = False
+            if has_none:
+                card = wipe_empty_fields([print_field_16(field) for field in fields])
             else:
+                #card = remove_trailing_fields(fields)
                 card = wipe_empty_fields(fields)
-            card_obj = BDFCard(card)
+            card_obj = BDFCard(card, has_none=False)
         return card_obj, card
 
     def _make_card_parser(self):
@@ -2008,7 +2007,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         card_instance = PMASS(card_obj, icard=0, comment=comment)
         self.add_property_mass(card_instance)
         for (i, j) in enumerate([3, 5, 7]):
-            if card_obj.field(j) is not None:
+            if card_obj.field(j):
                 card_instance = PMASS(card_obj, icard=i+1, comment=comment)
                 self.add_property_mass(card_instance)
 
@@ -2139,7 +2138,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
         return card_obj
 
 
-    def add_card(self, card_lines, card_name, comment='', is_list=True):
+    def add_card(self, card_lines, card_name, comment='', is_list=True, has_none=True):
         """
         Adds a card object to the BDF object.
 
@@ -2184,7 +2183,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
                   created.
         """
         card_name = card_name.upper()
-        card_obj, card = self.create_card_object(card_lines, card_name, is_list=is_list)
+        card_obj, card = self.create_card_object(card_lines, card_name, is_list=is_list, has_none=has_none)
 
         if self._auto_reject:
             self.reject_cards.append(card)
@@ -2938,7 +2937,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFAttributes
             the dynamic value defined by dict_of_vars
         .. seealso:: :func: `set_dynamic_syntax`
         """
-        key = key[1:].strip()
+        key = key.strip()[1:]
         self.log.debug("dynamic key = %r" % key)
         #self.dict_of_vars = {'P5':0.5,'ONEK':1000.}
         if key not in self.dict_of_vars:

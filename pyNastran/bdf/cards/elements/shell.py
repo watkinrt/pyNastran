@@ -1399,8 +1399,6 @@ class CQUAD4(QuadShell):
             msg = ('CQUAD4  %8i%8i%8i%8i%8i%8i\n' % tuple(data))
             return self.comment + msg
         else:
-            row2_data = [thetaMcid, zOffset,
-                         TFlag, T1, T2, T3, T4]
             thetaMcid = set_blank_if_default(self.thetaMcid, 0.0)
             zOffset = set_blank_if_default(self.zOffset, 0.0)
             TFlag = set_blank_if_default(self.TFlag, 0)
@@ -1409,6 +1407,8 @@ class CQUAD4(QuadShell):
             T3 = set_blank_if_default(self.T3, 1.0)
             T4 = set_blank_if_default(self.T4, 1.0)
 
+            row2_data = [thetaMcid, zOffset,
+                         TFlag, T1, T2, T3, T4]
             row2 = [print_field_8(field) for field in row2_data]
             data = [self.eid, self.Pid()] + nodes + row2
             msg = ('CQUAD4  %8i%8i%8i%8i%8i%8i%8s%8s\n'

@@ -269,11 +269,11 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         sys.exit('KeyboardInterrupt...sys.exit()')
     except IOError:  # only temporarily uncomment this when running lots of tests
         pass
-    #except CardParseSyntaxError:  # only temporarily uncomment this when running lots of tests
-        #print('failed test because CardParseSyntaxError...ignoring')
+    except CardParseSyntaxError:  # only temporarily uncomment this when running lots of tests
+        print('failed test because CardParseSyntaxError...ignoring')
         #pass
-    #except DuplicateIDsError:  # only temporarily uncomment this when running lots of tests
-        #print('failed test because DuplicateIDsError...ignoring')
+    except DuplicateIDsError:  # only temporarily uncomment this when running lots of tests
+        print('failed test because DuplicateIDsError...ignoring')
         #pass
     except RuntimeError:  # only temporarily uncomment this when running lots of tests
         if 'GRIDG' not in fem1.card_count:

@@ -174,8 +174,8 @@ class Test(ExtendedTestCase):
         with self.assertRaises(SyntaxError):
             string(BDFCard([None]), 0, 'field')
 
-        card = ['a', 'b1', '3.', 'C', None, '', 'frog']
-        exact = ['A', 'B1', SyntaxError, 'C', SyntaxError, SyntaxError, 'FROG']
+        card = ['a', 'b1', '3.', 'C', None, '', 'frog', '  type  ']
+        exact = ['A', 'B1', SyntaxError, 'C', SyntaxError, SyntaxError, 'FROG', 'TYPE']
         self.run_function(string, card, exact)
 
     #-------------------------------------------------------

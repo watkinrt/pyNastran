@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from six import string_types
 
 def build_table_lines(fields, nstart=1, nend=0):
@@ -46,6 +47,8 @@ def build_table_lines(fields, nstart=1, nend=0):
         fields_out += [None] * nspaces
     return fields_out
 
+def wipe_empty_fields2(card):
+    pass
 
 def wipe_empty_fields(card):
     """
@@ -66,13 +69,13 @@ def wipe_empty_fields(card):
     for field in card:
         if isinstance(field, string_types):
             field = field.strip()
-            if field == '':
-                field = None
+        elif field is None:
+            field = ''
         short_card.append(field)
 
     imax = 0
     for i, field in enumerate(card):
-        if short_card[i] is not None:
+        if short_card[i] is not '':
             imax = i
     out = short_card[:imax + 1]
     return out

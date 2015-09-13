@@ -258,6 +258,8 @@ TABLED1        1  LINEAR  LINEAR
 TABLED1      310  LINEAR  LINEAR
               0.      1. 200000.      1.    ENDT
 $SETS
+SET3,111,GRID,31,32,33,34,35,36,+
++,37,38
 ASET1   3        1      THRU     8
 ASET1   3       10      THRU    16
 SESET   0       1       THRU    10
@@ -270,6 +272,7 @@ DSCREEN STRESS  -100.   100
 DSCREEN LAMA    -100.0
 INCLUDE 'testC.bdf'
 $BROKEN CARDS
+panel,firstone,111
 ACCEL   1               .267261 .534522 .801784 X                       +
 +       0.0     -32.2   4.0     -161.0
 accel   999     888      0.977   0.877   0.677  Z                       +
