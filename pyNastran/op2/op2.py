@@ -127,7 +127,7 @@ class OP2(OP2_Scalar):
           Build      - call the __init__ on a results object (e.g. DisplacementObject)
           Start Over - Go to the start of the op2 file
           Ask        - launch a GUI dialog to let the user click which results to load
-
+ 
         Read Mode Definitions
         =====================
           0.   The default OP2 dictionary based-approach with no asking GUI
