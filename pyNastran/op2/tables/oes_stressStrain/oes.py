@@ -467,6 +467,7 @@ class OES(OP2Common):
             (2, 1, 111, b'OES1') : ('cbeam_stress', RealBeamStressArray),
             (2, 2, 111, b'OES1X') : ('cbeam_stress', 'ComplexBeamStressArray'),
             (2, 3, 111, b'OES1X') : ('cbeam_stress', 'ComplexBeamStressArray'),
+            (2, 3, 111, b'OESVM1') : ('cbeam_stress', 'ComplexBeamStressArray'),
 
             (4, 1, 4, b'OES1X1') : ('cshear_stress', RealShearStressArray),
             (4, 2, 5) : ('cshear_stress', ComplexShearStressArray),
@@ -495,6 +496,7 @@ class OES(OP2Common):
             (34, 1, 16, b'OES1') : ('cbar_stress', RealBarStressArray),
             (34, 2, 19, b'OES1X') : ('cbar_stress', ComplexBarStressArray),
             (34, 3, 19, b'OES1X') : ('cbar_stress', ComplexBarStressArray),
+            (34, 3, 19, b'OESVM1') : ('cbar_stress', ComplexBarStressArray),
             #(34, 1, 19) : ('cbar_stress', RandomBarStressArray),
             (100, 1, 10, b'OES1X1') : ('cbar_stress_10nodes', RealBar10NodesStressArray),
             (100, 1, 10, b'OES1X') : ('cbar_stress_10nodes', RealBar10NodesStressArray),
@@ -517,9 +519,11 @@ class OES(OP2Common):
 
             (67, 2, 121, b'OES1X') : ('chexa_stress', ComplexSolidStressArray),
             (67, 3, 121, b'OES1X') : ('chexa_stress', ComplexSolidStressArray),
+            (67, 3, 130, b'OESVM1') : ('chexa_stress', ComplexSolidStressArray),
 
             (68, 2, 95, b'OES1X') : ('cpenta_stress', ComplexSolidStressArray),
             (68, 3, 95, b'OES1X') : ('cpenta_stress', ComplexSolidStressArray),
+            (68, 3, 102, b'OESVM1') : ('cpenta_stress', ComplexSolidStressArray),
 
             (33, 1, 17, b'OES1X1') :  ('cquad4_stress', RealPlateStressArray),
             (33, 1, 17, b'OES1X') :  ('cquad4_stress', RealPlateStressArray),
@@ -533,6 +537,7 @@ class OES(OP2Common):
             (74, 1, 17, b'OES1') : ('ctria3_stress', RealPlateStrainArray),
             (74, 2, 15, b'OES1X') : ('ctria3_stress', ComplexPlateStrainArray),
             (74, 3, 15, b'OES1X') : ('ctria3_stress', ComplexPlateStrainArray),
+            (74, 3, 17, b'OESVM1') : ('ctria3_stress', ComplexPlateStrainArray),
             #(74, 1, 9) : ('ctria3_stress', RandomPlateStressArray),
 
             (82, 1, 87, b'OES1X1') : ('cquadr_stress', RealPlateStressArray),
@@ -558,6 +563,7 @@ class OES(OP2Common):
             (144, 1, 87, b'OES1X1') : ('cquad4_stress', RealPlateStressArray),
             (144, 1, 87, b'OES1') : ('cquad4_stress', RealPlateStressArray),
             (144, 2, 77, b'OES1X') : ('cquad4_stress', ComplexPlateStressArray),
+            (144, 3, 87, b'OESVM1') : ('cquad4_stress', ComplexPlateStressArray),
             #(144, 3, 77) : ('cquad4_stress', ComplexPlateStressArray),
             #(64, 1, 47) : ('cquad8_stress', RandomPlateStressArray), # random
             #(70, 1, 39) : ('ctriar_stress', RandomPlateStressArray),
@@ -611,6 +617,7 @@ class OES(OP2Common):
             (102, 1, 7, b'OES1') : ('cbush_stress', RealBushStressArray),
             (102, 2, 13, b'OES1X') : ('cbush_stress', ComplexCBushStressArray),
             (102, 3, 13, b'OES1X') : ('cbush_stress', ComplexCBushStressArray),
+            (102, 3, 13, b'OESVM1') : ('cbush_stress', ComplexCBushStressArray),
 
             (40, 1, 8, b'OES1X1') : ('cbush1d_stress_strain', RealBushStressArray),
             (40, 1, 8, b'OESNLXD') : ('cbush1d_stress_strain', RealBushStressArray),
@@ -1569,7 +1576,8 @@ class OES(OP2Common):
 
 
             numwide_real = 4 + 21 * nnodes_expected
-            numwide_imag = 4 + (17 - 4) * nnodes_expected
+            numwide_imag2 = 4 + (17 - 4) * nnodes_expected
+            numwide_imag3 = 4 + (17 - 3) * nnodes_expected
             numwide_random = 4 + (11 - 4) * nnodes_expected
             preline1 = '%s-%s' % (self.element_name, self.element_type)
             preline2 = ' ' * len(preline1)
@@ -1702,9 +1710,9 @@ class OES(OP2Common):
                                              a_cos, b_cos, c_cos, pressure, svm)
                             n += 84
 
-            elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # complex
+            elif self.format_code in [2, 3] and self.num_wide in [numwide_imag2, numwide_imag3]:  # complex
                 # TODO: vectorize
-                ntotal = numwide_imag * 4
+                ntotal = self.num_wide * 4
                 nelements = ndata // ntotal
                 self.ntotal += nelements * nnodes_expected
                 auto_return, is_vectorized = self._create_oes_object4(
@@ -1720,13 +1728,14 @@ class OES(OP2Common):
                     ielement2 = ielement + nelements
                     itotal = obj.itotal
                     itotal2 = itotal + nelements * nnodes_expected
+                    ncols = (self.num_wide-4)/nnodes_expected
 
-                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_imag)
-                    floats1 = floats[:, 4:].reshape(nelements * nnodes_expected, 13)
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, self.num_wide)
+                    floats1 = floats[:, 4:].reshape(nelements * nnodes_expected, ncols)
                     obj._times[obj.itime] = dt
                     if obj.itime == 0:
-                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_imag)
-                        ints1 = ints[:, 4:].reshape(nelements * nnodes_expected, 13)
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, self.num_wide)
+                        ints1 = ints[:, 4:].reshape(nelements * nnodes_expected, ncols)
                         eids = ints[:, 0] // 10
                         cids = ints[:, 1]
                         nids = ints1[:, 0]
@@ -2055,9 +2064,14 @@ class OES(OP2Common):
                 return ndata
             self._results._found_result(result_name)
 
+            numwide_real = 17
+            numwide_imag2 = 15
+            numwide_imag3 = 17
+            numwide_random = 9
+
             slot = getattr(self, result_name)
-            if self.format_code == 1 and self.num_wide == 17:  # real
-                ntotal = 68  # 4*17
+            if self.format_code == 1 and self.num_wide == numwide_real:  # real
+                ntotal = 4*self.num_wide  # 4*17
                 nelements = ndata // ntotal
                 nlayers = nelements * 2  # 2 layers per node
                 auto_return, is_vectorized = self._create_oes_object4(
@@ -2082,10 +2096,10 @@ class OES(OP2Common):
 
                     itime = obj.itime
                     if itime == 0:
-                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 17)
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, self.num_wide)
                         eids = ints[:, 0] // 10
                         ilayers = ints[:, 1]
-                        ints2 = ints[:, 1:].reshape(nlayers, 8)
+                        ints2 = ints[:, 1:].reshape(nlayers, (self.num_wide-1)/2)
                         assert eids.min() > 0, eids
                         obj._times[obj.itime] = dt
                         obj.element_node[itotal:iend:2, 0] = eids
@@ -2093,8 +2107,8 @@ class OES(OP2Common):
                         #obj.element_node[itotal:iend, 1] = 0
                         #print('obj.element_node\n', obj.element_node)
 
-                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 17)
-                    floats1 = floats[:, 1:].reshape(nlayers, 8)
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, self.num_wide)
+                    floats1 = floats[:, 1:].reshape(nlayers, (self.num_wide-1)/2)
                     obj.data[obj.itime, itotal:iend, :] = floats1
                     obj._times[obj.itime] = dt
                     obj.itotal += nlayers
@@ -2118,8 +2132,8 @@ class OES(OP2Common):
                                  angle2, major2, minor2, vm2)
                         n += ntotal
                 #ass
-            elif self.format_code in [2, 3] and self.num_wide == 15:  # imag
-                ntotal = 60  # 4*15
+            elif self.format_code in [2, 3] and self.num_wide in [numwide_imag2, numwide_imag3]:  # imag
+                ntotal = 4*self.num_wide  # 4*17 or 4*15
                 nelements = ndata // ntotal
                 auto_return, is_vectorized = self._create_oes_object4(
                     nelements, result_name, slot, obj_vector_complex)
@@ -2135,14 +2149,14 @@ class OES(OP2Common):
                     ielement = obj.ielement
                     ielement2 = ielement + nelements
 
-                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 15)
-                    floats1 = floats[:, 1:].reshape(nelements * 2, 7)
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, self.num_wide)
+                    floats1 = floats[:, 1:].reshape(nelements * 2, (self.num_wide-1)/2)
                     obj._times[obj.itime] = dt
                     if obj.itime == 0:
-                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 15)
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, self.num_wide)
                         eids = ints[:, 0] // 10
                         ints[:, 0] = 0
-                        ints1 = ints.reshape(nelements, 15)
+                        ints1 = ints.reshape(nelements, self.num_wide)
                         nids = ints[:, 0]
 
                         assert eids.min() > 0, eids.min()
@@ -2199,7 +2213,7 @@ class OES(OP2Common):
                         obj.add_new_eid_sort1(dt, eid, cen, fd1, sx1, sy1, txy1)
                         obj.add_sort1(dt, eid, cen, fd2, sx2, sy2, txy2)
                         n += ntotal
-            elif self.format_code == 1 and self.num_wide == 9: # random
+            elif self.format_code == 1 and self.num_wide == numwide_random: # random
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)
             else:
@@ -2273,7 +2287,8 @@ class OES(OP2Common):
 
             slot = getattr(self, result_name)
             numwide_real = 2 + 17 * nnodes_all
-            numwide_imag = 2 + 15 * nnodes_all
+            numwide_imag2 = 2 + 15 * nnodes_all
+            numwide_imag3 = 2 + 17 * nnodes_all
             numwide_random = 2 + 9 * nnodes_all
 
             etype = self.element_name
@@ -2389,8 +2404,8 @@ class OES(OP2Common):
                             obj._add(dt, eid, grid, fd2, sx2, sy2,
                                      txy2, angle2, major2, minor2, vm2)
                             n += 68
-            elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
-                ntotal = numwide_imag * 4
+            elif self.format_code in [2, 3] and self.num_wide in [numwide_imag2, numwide_imag3]:  # imag
+                ntotal = self.num_wide * 4
                 assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
                 nelements = ndata // ntotal
 
@@ -2400,6 +2415,7 @@ class OES(OP2Common):
                     self._data_factor = 2
                     return nelements * ntotal
                 obj = self.obj
+                ncols = (self.num_wide-2)/nnodes_all
 
                 if self.use_vector and is_vectorized:
                     n = nelements * 4 * self.num_wide
@@ -2408,14 +2424,14 @@ class OES(OP2Common):
                     ielement = obj.ielement
                     ielement2 = ielement + nelements
 
-                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_imag)
-                    floats1 = floats[:, 2:].reshape(nelements * nnodes_all, 15)
-                    floats2 = floats1[:, 1:].reshape(nelements * nnodes_all * 2, 7)
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, self.num_wide)
+                    floats1 = floats[:, 2:].reshape(nelements * nnodes_all, ncols)
+                    floats2 = floats1[:, 1:].reshape(nelements * nnodes_all * 2, (ncols-1)/2)
                     obj._times[obj.itime] = dt
                     if obj.itime == 0:
-                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_imag)
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, self.num_wide)
                         ints[:, 2] = 0  # set center node to 0
-                        ints1 = ints[:, 2:].reshape(nelements * nnodes_all, 15)
+                        ints1 = ints[:, 2:].reshape(nelements * nnodes_all, ncols)
                         eids = ints[:, 0] // 10
                         nids = ints1[:, 0]
                         eids2 = np.vstack([eids] * (nnodes_all * 2)).T.ravel()
@@ -2508,14 +2524,14 @@ class OES(OP2Common):
                             obj.add_sort1(dt, eid, grid, fd2, sx2, sy2, txy2)
             elif self.format_code == 1 and self.num_wide == numwide_random: # random
                 msg = self.code_information()
-                msg += '  numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
-                    self.num_wide, numwide_real, numwide_imag, numwide_random)
+                msg += '  numwide=%s numwide_real=%s numwide_imag2=%s numwide_imag3=%s numwide_random=%s' % (
+                    self.num_wide, numwide_real, numwide_imag2, numwide_imag3, numwide_random)
                 return self._not_implemented_or_skip(data, ndata, msg)
             elif self.format_code == 2 and self.num_wide == 87:
                 # 87 - CQUAD4-144
                 #msg = self.code_information()
-                msg = 'OES-CQUAD4-random-numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
-                    self.num_wide, numwide_real, numwide_imag, numwide_random)
+                msg = 'OES-CQUAD4-random-numwide=%s numwide_real=%s numwide_imag2=%s numwide_imag3=%s numwide_random=%s' % (
+                    self.num_wide, numwide_real, numwide_imag2, numwide_imag3, numwide_random)
                 return self._not_implemented_or_skip(data, ndata, msg)
             else:
                 raise RuntimeError(self.code_information())
