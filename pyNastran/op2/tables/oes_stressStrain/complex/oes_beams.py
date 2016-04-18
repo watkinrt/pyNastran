@@ -5,6 +5,7 @@ from six.moves import range, zip
 from itertools import count
 import numpy as np
 from numpy import zeros
+from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
@@ -93,7 +94,7 @@ class ComplexBeamArray(OES_Object):
         # sxc, sxd, sxe, sxf
         # smax, smin, MSt, MSc
         self.xxb = zeros(self.ntotal, dtype='float32')
-        self.data = zeros((self.ntimes, self.ntotal, 8), dtype='complex64')
+        self.data = zeros((self.ntimes, self.ntotal, 4), dtype='complex64')
 
     def finalize(self):
         sd = self.data[0, :, 0].real
@@ -155,14 +156,25 @@ class ComplexBeamArray(OES_Object):
         self.add_new_eid_sort1(dt, eid, out)
 
     def add_new_eid_sort1(self, dt, eid, out):
-        (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
+        (grid, sd, sxcr, sxdr, sxer, sxfr, sxci, sxdi, sxei, sxfi) = out
         assert isinstance(eid, int), eid
         assert eid >= 0, eid
         self._times[self.itime] = dt
         self.element_node[self.itotal] = [eid, grid]
         self.xxb[self.itotal] = sd
-        self.data[self.itime, self.itotal, :] = [sxc, sxd, sxe, sxf,
-                                                 smax, smin, mst, msc]
+
+        is_magnitude_phase = self.is_magnitude_phase()
+        if is_magnitude_phase:
+            real_imag = [sxcr + 1.j*sxci,
+                         sxdr + 1.j*sxdi,
+                         sxer + 1.j*sxei,
+                         sxfr + 1.j*sxfi]
+        else:
+            mag = out[2:6]
+            phase = out[6:]
+            real_imag = polar_to_real_imag(mag, phase)
+
+        self.data[self.itime, self.itotal, :] = real_imag
         self.itotal += 1
         self.ielement += 1
 
@@ -170,12 +182,23 @@ class ComplexBeamArray(OES_Object):
         self.add_sort1(dt, eid, out)
 
     def add_sort1(self, dt, eid, out):
-        (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
+        (grid, sd, sxcr, sxdr, sxer, sxfr, sxci, sxdi, sxei, sxfi) = out
 
         self.element_node[self.itotal, :] = [eid, grid]
         self.xxb[self.itotal] = sd
-        self.data[self.itime, self.itotal, :] = [sxc, sxd, sxe, sxf,
-                                                 smax, smin, mst, msc]
+
+        is_magnitude_phase = self.is_magnitude_phase()
+        if is_magnitude_phase:
+            real_imag = [sxcr + 1.j*sxci,
+                         sxdr + 1.j*sxdi,
+                         sxer + 1.j*sxei,
+                         sxfr + 1.j*sxfi]
+        else:
+            mag = out[2:6]
+            phase = out[6:]
+            real_imag = polar_to_real_imag(mag, phase)
+        self.data[self.itime, self.itotal, :] = real_imag
+
         self.itotal += 1
 
     def get_stats(self):
@@ -492,8 +515,7 @@ class ComplexBeamStressArray(ComplexBeamArray, StressObject):
     def get_headers(self):
         headers = [
             #'grid', 'xxb',
-            'sxc', 'sxd', 'sxe', 'sxf',
-            'smax', 'smin', 'MS_tension', 'MS_compression'
+            'sxc', 'sxd', 'sxe', 'sxf'
         ]
         return headers
 
@@ -512,14 +534,13 @@ class ComplexBeamStressArray(ComplexBeamArray, StressObject):
 
 class ComplexBeamStrainArray(ComplexBeamArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ComplexlBeamArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        ComplexBeamArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
     def get_headers(self):
         headers = [
             #'grid', 'xxb',
-            'sxc', 'sxd', 'sxe', 'sxf',
-            'smax', 'smin', 'MS_tension', 'MS_compression'
+            'sxc', 'sxd', 'sxe', 'sxf'
         ]
         return headers
 

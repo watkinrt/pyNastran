@@ -1087,14 +1087,15 @@ class OES(OP2Common):
                     edata = data[n:n+n1]
                     n += n1
 
+                    #(grid, sd, ercr, exdr, exer, exfr,
+                    #           exci, exdi, exei, exfi) = out
                     out = s1.unpack(edata)
                     eid_device = out[0]
                     eid = eid_device // 10
                     if self.is_debug_file:
                         self.binary_debug.write('CBEAM-2 - eid=%i out=%s\n' % (eid, str(out)))
 
-                    #(grid, sd, ercr, exdr, exer, exfr,
-                    #           exci, exdi, exei, exfi) = out
+
                     obj.add_new_eid(dt, eid, out[1:])
 
                     for inode in range(nnodes):
