@@ -35,6 +35,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import RealTriaxStress
 
 
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import ComplexBarStressArray, ComplexBarStrainArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_beams import ComplexBeamStressArray, ComplexBeamStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush import (ComplexCBushStressArray, ComplexCBushStrainArray)
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d import ComplexCBush1DStressArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStressArray, ComplexPlateStrainArray
@@ -465,9 +466,9 @@ class OES(OP2Common):
             (2, 1, 111, b'OES1X1') : ('cbeam_stress', RealBeamStressArray),
             (2, 1, 111, b'OES1X') : ('cbeam_stress', RealBeamStressArray),
             (2, 1, 111, b'OES1') : ('cbeam_stress', RealBeamStressArray),
-            (2, 2, 111, b'OES1X') : ('cbeam_stress', 'ComplexBeamStressArray'),
-            (2, 3, 111, b'OES1X') : ('cbeam_stress', 'ComplexBeamStressArray'),
-            (2, 3, 111, b'OESVM1') : ('cbeam_stress', 'ComplexBeamStressArray'),
+            (2, 2, 111, b'OES1X') : ('cbeam_stress', ComplexBeamStressArray),
+            (2, 3, 111, b'OES1X') : ('cbeam_stress', ComplexBeamStressArray),
+            (2, 3, 111, b'OESVM1') : ('cbeam_stress', ComplexBeamStressArray),
 
             (4, 1, 4, b'OES1X1') : ('cshear_stress', RealShearStressArray),
             (4, 2, 5) : ('cshear_stress', ComplexShearStressArray),
@@ -1052,17 +1053,25 @@ class OES(OP2Common):
                         obj.add(dt, eid, out)
             elif self.format_code in [2, 3] and self.num_wide == 111:  # imag and random?
                 # TODO: vectorize
-                if self.read_mode == 1:
-                    return ndata
-                if self.is_debug_file:
-                    self.binary_debug.write('skipping imag/random OES-CBEAM\n')
+#                if self.read_mode == 1:
+#                    return ndata
+#                if self.is_debug_file:
+#                    self.binary_debug.write('skipping imag/random OES-CBEAM\n')
 
                 ntotal = 444 # 44 + 10*40  (11 nodes)
-                #if self.is_stress():
-                    #self.create_transient_object(self.beamStress, RealBeamStress)
-                #else:
-                    #self.create_transient_object(self.beamStrain, RealBeamStrain)
+                if self.is_stress():
+                    obj_vector_complex = ComplexBeamStressArray
+                else:
+                    obj_vector_complex = ComplexBeamStrainArray
 
+                nelements = ndata // ntotal
+                nlayers = nelements * 11
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nlayers, result_name, slot, obj_vector_complex)
+                if auto_return:
+                    self._data_factor = 11
+                    return nelements * self.num_wide * 4
+                obj = self.obj
                 nelements = ndata // ntotal
                 #s = self.struct_i
 
@@ -1086,13 +1095,13 @@ class OES(OP2Common):
 
                     #(grid, sd, ercr, exdr, exer, exfr,
                     #           exci, exdi, exei, exfi) = out
-                    #obj.add_new_eid(dt, eid, out[1:])
+                    obj.add_new_eid(dt, eid, out[1:])
 
                     for inode in range(nnodes):
                         edata = data[n:n+n2]
                         n += n2
                         out = s2.unpack(edata)
-                        #obj.add(dt, eid, out)
+                        obj.add(dt, eid, out)
                 return ndata
             elif self.format_code == 1 and self.num_wide == 67: # random
                 msg = self.code_information()
