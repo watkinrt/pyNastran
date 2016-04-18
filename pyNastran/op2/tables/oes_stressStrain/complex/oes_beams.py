@@ -156,26 +156,7 @@ class ComplexBeamArray(OES_Object):
         self.add_new_eid_sort1(dt, eid, out)
 
     def add_new_eid_sort1(self, dt, eid, out):
-        (grid, sd, sxcr, sxdr, sxer, sxfr, sxci, sxdi, sxei, sxfi) = out
-        assert isinstance(eid, int), eid
-        assert eid >= 0, eid
-        self._times[self.itime] = dt
-        self.element_node[self.itotal] = [eid, grid]
-        self.xxb[self.itotal] = sd
-
-        is_magnitude_phase = self.is_magnitude_phase()
-        if is_magnitude_phase:
-            real_imag = [sxcr + 1.j*sxci,
-                         sxdr + 1.j*sxdi,
-                         sxer + 1.j*sxei,
-                         sxfr + 1.j*sxfi]
-        else:
-            mag = out[2:6]
-            phase = out[6:]
-            real_imag = polar_to_real_imag(mag, phase)
-
-        self.data[self.itime, self.itotal, :] = real_imag
-        self.itotal += 1
+        self.add_sort1(dt, eid, out)
         self.ielement += 1
 
     def add(self, dt, eid, out):
@@ -183,20 +164,23 @@ class ComplexBeamArray(OES_Object):
 
     def add_sort1(self, dt, eid, out):
         (grid, sd, sxcr, sxdr, sxer, sxfr, sxci, sxdi, sxei, sxfi) = out
-
-        self.element_node[self.itotal, :] = [eid, grid]
+        assert isinstance(eid, int), eid
+        assert eid >= 0, eid
+        self._times[self.itime] = dt
+        self.element_node[self.itotal] = [eid, grid]
         self.xxb[self.itotal] = sd
 
-        is_magnitude_phase = self.is_magnitude_phase()
-        if is_magnitude_phase:
+        if self.is_magnitude_phase():
+            real_imag = [polar_to_real_imag(sxcr, sxci),
+                         polar_to_real_imag(sxdr, sxdi),
+                         polar_to_real_imag(sxer, sxei),
+                         polar_to_real_imag(sxfr, sxfi)]
+        else:
             real_imag = [sxcr + 1.j*sxci,
                          sxdr + 1.j*sxdi,
                          sxer + 1.j*sxei,
                          sxfr + 1.j*sxfi]
-        else:
-            mag = out[2:6]
-            phase = out[6:]
-            real_imag = polar_to_real_imag(mag, phase)
+
         self.data[self.itime, self.itotal, :] = real_imag
 
         self.itotal += 1
