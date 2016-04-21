@@ -531,6 +531,7 @@ class OES(OP2Common):
             (33, 1, 17, b'OES1') :  ('cquad4_stress', RealPlateStressArray),
             (33, 2, 15, b'OES1X') :  ('cquad4_stress', ComplexPlateStressArray),
             (33, 3, 15, b'OES1X') :  ('cquad4_stress', ComplexPlateStressArray),
+            (33, 3, 17, b'OESVM1') : ('cquad4_stress', ComplexPlateStressArray),
             #(33, 3, 0) :  ('cquad4_stress', RandomPlateStressArray),
 
             (74, 1, 17, b'OES1X1') : ('ctria3_stress', RealPlateStrainArray),
@@ -1881,8 +1882,11 @@ class OES(OP2Common):
             slot = getattr(self, result_name)
 
             numwide_real = 17
-            if self.format_code == 1 and self.num_wide == 17:  # real
-                ntotal = 68  # 4*17
+            numwide_image2 = 15
+            numwide_image3 = 17
+
+            if self.format_code == 1 and self.num_wide == numwide_real:  # real
+                ntotal = self.num_wide*4  # 4*17
                 nelements = ndata // ntotal
                 nlayers = nelements * 2
                 nnodes_expected = 2
@@ -1906,13 +1910,13 @@ class OES(OP2Common):
                     obj._times[obj.itime] = dt
                     if obj.itime == 0:
                         ints = fromstring(data, dtype=self.idtype)
-                        ints1 = ints.reshape(nelements, numwide_real)
+                        ints1 = ints.reshape(nelements, self.num_wide)
                         eids = ints1[:, 0] // 10
                         eids = np.vstack([eids, eids]).T.ravel()
                         assert eids.min() > 0, eids.min()
                         obj.element_node[itotal:itotal2, 0] = eids
 
-                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)[:, 1:]
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, self.num_wide)[:, 1:]
 
                     #fd, sx, sy, txy, angle, major, minor, max_shear
                     floats1 = floats.reshape(nelements * nnodes_expected, 8)
@@ -1939,16 +1943,18 @@ class OES(OP2Common):
                         obj._add(dt, eid, cen, fd2, sx2, sy2, txy2,
                                  angle2, major2, minor2, max_shear2)
                         n += ntotal
-            elif self.format_code in [2, 3] and self.num_wide == 15:  # imag
+            elif self.format_code in [2, 3] and self.num_wide in [numwide_image2, numwide_image3]:  # imag
                 # TODO: vectorize
                 nnodes = 0  # centroid + 4 corner points
-                ntotal = 4 * (15 * (nnodes + 1))
+                ntotal = 4 * (self.num_wide * (nnodes + 1))
                 nelements = ndata // ntotal
                 auto_return, is_vectorized = self._create_oes_object4(
                     nelements, result_name, slot, obj_vector_complex)
                 if auto_return:
                     self._data_factor = 2
                     return nelements * ntotal
+
+                cols = (self.num_wide-1)/2
 
                 obj = self.obj
                 if self.use_vector and is_vectorized:
@@ -1959,14 +1965,14 @@ class OES(OP2Common):
                     ielement = obj.ielement
                     ielement2 = ielement + nelements
 
-                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 15 * nnodes_all)
-                    floats1 = floats[:, 1:].reshape(nelements * nnodes_all * 2, 7)
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, self.num_wide * nnodes_all)
+                    floats1 = floats[:, 1:].reshape(nelements * nnodes_all * 2, cols)
                     obj._times[obj.itime] = dt
                     if obj.itime == 0:
-                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 15 * nnodes_all)
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, self.num_wide * nnodes_all)
                         eids = ints[:, 0] // 10
                         ints[:, 0] = 0
-                        ints1 = ints.reshape(nelements * nnodes_all, 15)
+                        ints1 = ints.reshape(nelements * nnodes_all, self.num_wide)
                         nids = ints[:, 0]
                         #print(eids)
                         assert eids.min() > 0, eids.min()
@@ -1999,12 +2005,19 @@ class OES(OP2Common):
 
                     cen = 0 # 'CEN/4'
                     for i in range(nelements):
-                        edata = data[n:n+60]  # 4*15=60
-                        n += 60
+                        edata = data[n:n+4*self.num_wide]  # 4*15 (or 17)=60
+                        n += 4*self.num_wide
                         out = s1.unpack(edata)  # 15
-                        (eid_device,
-                         fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
-                         fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
+                        assert len(out) == self.num_wide, "Extracted data is {} long, but should be {}".format(len(out), self.num_wide)
+
+                        if self.num_wide == 15:
+                            (eid_device,
+                             fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
+                             fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
+                        else:
+                            (eid_device,
+                             fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i, ovm1,
+                             fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i, ovm2) = out
 
                         eid = eid_device // 10
                         if self.is_debug_file:
@@ -2029,14 +2042,23 @@ class OES(OP2Common):
                         obj.add_sort1(dt, eid, cen, fd2, sx2, sy2, txy2)
 
                         for node_id in range(nnodes):  # nodes pts
-                            edata = data[n:n+60]  # 4*15=60
-                            n += 60
+                            edata = data[n:n+4*self.num_wide]  # 4*15 (or 17)=60
+                            n += 4*self.num_wide
                             out = s2.unpack(edata)
+                            assert len(out) == self.num_wide, "Extracted data is {} long, but should be {}".format(len(out), self.num_wide)
+
                             if self.is_debug_file:
                                 self.binary_debug.write('  %s\n' % str(out))
-                            (grid,
-                             fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
-                             fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
+
+                            assert len(out) == self.num_wide, "Extracted data is {} long, but should be {}".format(len(out), self.num_wide)
+                            if self.num_wide == 15:
+                                (grid,
+                                 fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
+                                 fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
+                            else:
+                                (grid,
+                                 fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i, ovm1,
+                                 fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i, ovm2) = out
 
                             if is_magnitude_phase:
                                 sx1 = polar_to_real_imag(sx1r, sx1i)
@@ -2052,6 +2074,8 @@ class OES(OP2Common):
                                 sy2 = complex(sy2r, sy2i)
                                 txy1 = complex(txy1r, txy1i)
                                 txy2 = complex(txy2r, txy2i)
+
+                            # TODO this should be updated to work with the vonmises stresses
                             obj.add_new_node_sort1(dt, eid, grid, fd1, sx1, sy1, txy1)
                             obj.add_sort1(dt, eid, grid, fd2, sx2, sy2, txy2)
             elif self.format_code == 1 and self.num_wide == 0: # random
@@ -2198,9 +2222,17 @@ class OES(OP2Common):
                     for i in range(nelements):
                         edata = data[n:n + ntotal]
                         out = struct1.unpack(edata)
-                        (eid_device,
-                         fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
-                         fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i,) = out
+
+                        assert len(out) == self.num_wide, "Extracted data is {} long, but should be {}".format(len(out), self.num_wide)
+
+                        if self.num_wide == 15:
+                            (eid_device,
+                             fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
+                             fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i,) = out
+                        else:
+                            (grid,
+                             fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i, ovm1,
+                             fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i, ovm2) = out
                         eid = eid_device // 10
 
                         if self.is_debug_file:
@@ -2220,6 +2252,8 @@ class OES(OP2Common):
                             sy2 = complex(sy2r, sy2i)
                             txy1 = complex(txy1r, txy1i)
                             txy2 = complex(txy2r, txy2i)
+
+                        # TODO this should be updated to work with the vonmises stresses
                         obj.add_new_eid_sort1(dt, eid, cen, fd1, sx1, sy1, txy1)
                         obj.add_sort1(dt, eid, cen, fd2, sx2, sy2, txy2)
                         n += ntotal
@@ -2415,8 +2449,9 @@ class OES(OP2Common):
                                      txy2, angle2, major2, minor2, vm2)
                             n += 68
             elif self.format_code in [2, 3] and self.num_wide in [numwide_imag2, numwide_imag3]:  # imag
+                nwords = (self.num_wide-2)/nnodes_all
                 ntotal = self.num_wide * 4
-                assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
+                #assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
                 nelements = ndata // ntotal
 
                 auto_return, is_vectorized = self._create_oes_object4(
@@ -2425,7 +2460,8 @@ class OES(OP2Common):
                     self._data_factor = 2
                     return nelements * ntotal
                 obj = self.obj
-                ncols = (self.num_wide-2)/nnodes_all
+
+                ncols = (nwords-1)/2
 
                 if self.use_vector and is_vectorized:
                     n = nelements * 4 * self.num_wide
@@ -2435,13 +2471,13 @@ class OES(OP2Common):
                     ielement2 = ielement + nelements
 
                     floats = fromstring(data, dtype=self.fdtype).reshape(nelements, self.num_wide)
-                    floats1 = floats[:, 2:].reshape(nelements * nnodes_all, ncols)
-                    floats2 = floats1[:, 1:].reshape(nelements * nnodes_all * 2, (ncols-1)/2)
+                    floats1 = floats[:, 2:].reshape(nelements * nnodes_all, nwords)
+                    floats2 = floats1[:, 1:].reshape(nelements * nnodes_all * 2, ncols)
                     obj._times[obj.itime] = dt
                     if obj.itime == 0:
                         ints = fromstring(data, dtype=self.idtype).reshape(nelements, self.num_wide)
                         ints[:, 2] = 0  # set center node to 0
-                        ints1 = ints[:, 2:].reshape(nelements * nnodes_all, ncols)
+                        ints1 = ints[:, 2:].reshape(nelements * nnodes_all, nwords)
                         eids = ints[:, 0] // 10
                         nids = ints1[:, 0]
                         eids2 = np.vstack([eids] * (nnodes_all * 2)).T.ravel()
@@ -2475,16 +2511,23 @@ class OES(OP2Common):
                         (eid_device, _) = s1.unpack(data[n:n+8])
                         n += 8
 
-                        edata = data[n:n+60]  # 4*15
-                        n += 60
+                        edata = data[n:n+ntotal]  # 4*15 (or 17)
+                        n += ntotal
                         out = s2.unpack(edata)  # len=15*4
+                        assert len(out) == nwords, "Extracted data is {} long, but should be {}".format(len(out), nwords)
 
                         eid = self._check_id(eid_device, 'element', stress_name, out)
                         if self.is_debug_file:
                             self.binary_debug.write('%s\n' % (str(out)))
-                        (grid,
-                         fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
-                         fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
+
+                        if nwords == 15:
+                            (grid,
+                             fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
+                             fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
+                        else:
+                            (grid,
+                             fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i, ovm1,
+                             fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i, ovm2) = out
                         #grid_center = 'CEN/%i' % grid   # this is correct, but fails
 
                         if is_magnitude_phase:
@@ -2502,18 +2545,27 @@ class OES(OP2Common):
                             txy1 = complex(txy1r, txy1i)
                             txy2 = complex(txy2r, txy2i)
 
+                        # TODO this should be updated to work with the vonmises stresses
                         obj.add_new_eid_sort1(dt, eid, grid_center, fd1, sx1, sy1, txy1)
                         obj.add_sort1(dt, eid, grid_center, fd2, sx2, sy2, txy2)
 
                         for node_id in range(nnodes):  # nodes pts
-                            edata = data[n:n + 60]  # 4*15=60
-                            n += 60
+                            edata = data[n:n + nwords*4]  # 4*15=60
+                            n += nwords*4
                             out = s2.unpack(edata)
+                            assert len(out) == nwords, "Extracted data is {} long, but should be {}".format(len(out), nwords)
+
                             if self.is_debug_file:
                                 self.binary_debug.write('%s\n' % (str(out)))
-                            (grid,
-                             fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
-                             fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
+
+                            if nwords == 15:
+                                (grid,
+                                 fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
+                                 fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
+                            else:
+                                (grid,
+                                 fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i, ovm1,
+                                 fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i, ovm2) = out
 
                             if is_magnitude_phase:
                                 sx1 = polar_to_real_imag(sx1r, sx1i)
@@ -2530,6 +2582,7 @@ class OES(OP2Common):
                                 txy1 = complex(txy1r, txy1i)
                                 txy2 = complex(txy2r, txy2i)
 
+                            # TODO this should be updated to work with the vonmises stresses
                             obj.add_new_node_sort1(dt, eid, grid, fd1, sx1, sy1, txy1)
                             obj.add_sort1(dt, eid, grid, fd2, sx2, sy2, txy2)
             elif self.format_code == 1 and self.num_wide == numwide_random: # random
